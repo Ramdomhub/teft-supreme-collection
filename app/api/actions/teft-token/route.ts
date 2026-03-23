@@ -70,11 +70,10 @@ export async function POST(req: NextRequest) {
 
     const amountLamports = Math.floor(amountSol * 1e9);
 
+    // Current free/public quote endpoint
     const quoteRes = await fetch(
-      `https://quote-api.jup.ag/v6/quote?inputMint=${INPUT_MINT}&outputMint=${OUTPUT_MINT}&amount=${amountLamports}&slippageBps=50`,
-      {
-        cache: "no-store",
-      }
+      `https://lite-api.jup.ag/swap/v1/quote?inputMint=${INPUT_MINT}&outputMint=${OUTPUT_MINT}&amount=${amountLamports}&slippageBps=50`,
+      { cache: "no-store" }
     );
 
     if (!quoteRes.ok) {
@@ -88,7 +87,8 @@ export async function POST(req: NextRequest) {
 
     const quote = await quoteRes.json();
 
-    const swapRes = await fetch("https://quote-api.jup.ag/v6/swap", {
+    // Current free/public swap endpoint
+    const swapRes = await fetch("https://lite-api.jup.ag/swap/v1/swap", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
