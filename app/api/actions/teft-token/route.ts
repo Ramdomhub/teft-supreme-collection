@@ -51,10 +51,13 @@ export async function POST(req: NextRequest) {
     const account = body?.account;
 
     if (!account) {
-      return new Response("Missing wallet address", {
-        status: 400,
-        headers,
-      });
+      return new Response(
+        JSON.stringify({ error: "Missing wallet address" }),
+        {
+          status: 400,
+          headers,
+        }
+      );
     }
 
     const url = new URL(req.url);
@@ -62,7 +65,7 @@ export async function POST(req: NextRequest) {
     const amountSol = parseFloat(amountParam);
 
     if (isNaN(amountSol) || amountSol <= 0) {
-      return new Response("Invalid amount", {
+      return new Response(JSON.stringify({ error: "Invalid amount" }), {
         status: 400,
         headers,
       });
@@ -70,7 +73,6 @@ export async function POST(req: NextRequest) {
 
     const amountLamports = Math.floor(amountSol * 1e9);
 
-    // Jupiter Ultra order endpoint
     const orderUrl =
       `https://lite-api.jup.ag/ultra/v1/order` +
       `?inputMint=${INPUT_MINT}` +
@@ -79,27 +81,51 @@ export async function POST(req: NextRequest) {
       `&taker=${account}`;
 
     const orderRes = await fetch(orderUrl, {
+      method: "GET",
       cache: "no-store",
+      headers: {
+        accept: "application/json",
+      },
     });
 
-    if (!orderRes.ok) {
-      const text = await orderRes.text();
-      console.error("Ultra order error:", text);
-      return new Response("Failed to fetch quote", {
-        status: 500,
-        headers,
-      });
+    const rawText = await orderRes.text();
+
+    let order: any = null;
+    try {
+      order = JSON.parse(rawText);
+    } catch {
+      order = { raw: rawText };
     }
 
-    const order = await orderRes.json();
+    console.log("Jupiter order status:", orderRes.status);
+    console.log("Jupiter order response:", JSON.stringify(order, null, 2));
 
-    // Ultra returns a base64 tx under `transaction`
+    if (!orderRes.ok) {
+      return new Response(
+        JSON.stringify({
+          error: "Failed to fetch quote",
+          status: orderRes.status,
+          jupiter: order,
+        }),
+        {
+          status: 500,
+          headers,
+        }
+      );
+    }
+
+    // Wichtig: wenn keine transaction kommt, gib die volle Jupiter-Antwort zurück
     if (!order?.transaction) {
-      console.error("Missing transaction in Ultra order response:", order);
-      return new Response("No transaction returned", {
-        status: 500,
-        headers,
-      });
+      return new Response(
+        JSON.stringify({
+          error: "No transaction returned",
+          jupiter: order,
+        }),
+        {
+          status: 500,
+          headers,
+        }
+      );
     }
 
     return Response.json(
@@ -109,11 +135,17 @@ export async function POST(req: NextRequest) {
       },
       { headers }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("POST error:", error);
-    return new Response("Something went wrong", {
-      status: 500,
-      headers,
-    });
+    return new Response(
+      JSON.stringify({
+        error: "Something went wrong",
+        detail: error?.message || String(error),
+      }),
+      {
+        status: 500,
+        headers,
+      }
+    );
   }
 }
