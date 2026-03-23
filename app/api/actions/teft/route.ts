@@ -20,6 +20,7 @@ export async function GET() {
     {
       title: "TEFT Supreme",
       description: "Inside X.",
+      icon: "https://teft-supreme-collection.vercel.app/teft",
       label: "Buy",
     },
     { headers }
