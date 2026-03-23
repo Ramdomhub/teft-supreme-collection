@@ -1,60 +1,96 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
+import Script from "next/script";
+
+declare global {
+  interface Window {
+    Jupiter?: {
+      init: (options: Record<string, unknown>) => void;
+    };
+  }
+}
 
 const TOKEN_MINT = "8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump";
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 
-export default function TeftTokenPage() {
-  const [isMobile, setIsMobile] = useState(false);
+// Referral später ersetzen:
+const REFERRAL_ACCOUNT = "REPLACE_WITH_YOUR_REFERRAL_ACCOUNT";
+// Beispiel: 50 = 0.5%
+const REFERRAL_FEE_BPS = 50;
 
+export default function TeftTokenPage() {
   useEffect(() => {
-    const ua = navigator.userAgent || "";
-    const mobile =
-      /iPhone|iPad|iPod|Android/i.test(ua);
-    setIsMobile(mobile);
+    const initPlugin = () => {
+      if (!window.Jupiter) return;
+
+      window.Jupiter.init({
+        displayMode: "integrated",
+        integratedTargetId: "jupiter-plugin",
+        enableWalletPassthrough: false,
+        formProps: {
+          initialInputMint: SOL_MINT,
+          initialOutputMint: TOKEN_MINT,
+          initialAmount: "0.01",
+          fixedMint: "output",
+          swapMode: "ExactIn",
+          referralAccount:
+            REFERRAL_ACCOUNT !== "REPLACE_WITH_YOUR_REFERRAL_ACCOUNT"
+              ? REFERRAL_ACCOUNT
+              : undefined,
+          referralFee:
+            REFERRAL_ACCOUNT !== "REPLACE_WITH_YOUR_REFERRAL_ACCOUNT"
+              ? REFERRAL_FEE_BPS
+              : undefined,
+        },
+      });
+    };
+
+    const onReady = () => initPlugin();
+
+    if (window.Jupiter) {
+      initPlugin();
+    } else {
+      window.addEventListener("load", onReady);
+    }
+
+    return () => {
+      window.removeEventListener("load", onReady);
+    };
   }, []);
 
-  const phantomLink = `https://phantom.com/tokens/solana/${TOKEN_MINT}`;
-  const jupiterBase = `https://jup.ag/swap?sell=${SOL_MINT}&buy=${TOKEN_MINT}`;
-
-  const buyLinks = [
-    { label: "Buy 0.01 SOL", href: `${jupiterBase}&amount=0.01` },
-    { label: "Buy 0.05 SOL", href: `${jupiterBase}&amount=0.05` },
-    { label: "Buy 0.1 SOL", href: `${jupiterBase}&amount=0.1` },
-  ];
-
   return (
-    <main style={styles.page}>
-      <div style={styles.card}>
-        <img src="/teft.png" style={styles.image} />
+    <>
+      <Script
+        src="https://plugin.jup.ag/plugin-v1.js"
+        strategy="afterInteractive"
+      />
 
-        <h1 style={styles.title}>Buy TEFT</h1>
-        <p style={styles.subtitle}>Swap SOL → TEFT</p>
+      <main style={styles.page}>
+        <div style={styles.card}>
+          <img src="/teft.png" alt="TEFT" style={styles.image} />
 
-        <div style={styles.buttons}>
-          {buyLinks.map((b) => (
-            <a key={b.label} href={b.href} target="_blank" style={styles.primary}>
-              {b.label}
-            </a>
-          ))}
+          <div style={styles.header}>
+            <h1 style={styles.title}>Buy TEFT</h1>
+            <p style={styles.subtitle}>Swap SOL → TEFT</p>
+          </div>
+
+          <div style={styles.metaRow}>
+            <span style={styles.metaChip}>0.01 SOL default</span>
+            <span style={styles.metaChip}>Mobile ready</span>
+            <span style={styles.metaChip}>Ultra swap</span>
+          </div>
+
+          <div id="jupiter-plugin" style={styles.pluginWrap} />
+
+          <div style={styles.footer}>
+            <span>Powered by Jupiter</span>
+            <span style={styles.dot}>•</span>
+            <span>TEFT</span>
+          </div>
         </div>
-
-        <a
-          href={isMobile ? phantomLink : jupiterBase}
-          target="_blank"
-          style={styles.secondary}
-        >
-          {isMobile ? "Open in Phantom" : "Open in Jupiter"}
-        </a>
-
-        <div style={styles.fomo}>
-          <span>Momentum building</span>
-          <span>•</span>
-          <span>Price moving</span>
-        </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
 
@@ -64,63 +100,67 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#ffffff",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    alignItems: "flex-start",
+    padding: "24px 16px 40px",
     fontFamily:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial',
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
   card: {
     width: "100%",
-    maxWidth: 420,
+    maxWidth: 520,
     border: "1px solid #e6e6e6",
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 18,
+    overflow: "hidden",
+    background: "#fff",
   },
   image: {
     width: "100%",
-    borderRadius: 12,
-    marginBottom: 12,
+    display: "block",
+    aspectRatio: "1 / 1",
+    objectFit: "cover",
+    borderBottom: "1px solid #f0f0f0",
+  },
+  header: {
+    padding: "16px 16px 8px",
   },
   title: {
-    fontSize: 20,
-    fontWeight: 600,
     margin: 0,
+    fontSize: 22,
+    lineHeight: 1.1,
+    fontWeight: 700,
+    color: "#0f1419",
   },
   subtitle: {
+    margin: "6px 0 0",
     fontSize: 14,
-    color: "#555",
-    marginBottom: 16,
+    color: "#536471",
   },
-  buttons: {
+  metaRow: {
     display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    marginBottom: 12,
+    gap: 8,
+    flexWrap: "wrap",
+    padding: "0 16px 16px",
   },
-  primary: {
-    padding: "12px",
-    background: "#000",
-    color: "#fff",
-    textAlign: "center",
+  metaChip: {
+    fontSize: 12,
+    color: "#536471",
+    border: "1px solid #e6e6e6",
     borderRadius: 999,
-    textDecoration: "none",
-    fontWeight: 600,
+    padding: "6px 10px",
+    background: "#fff",
   },
-  secondary: {
-    display: "block",
-    textAlign: "center",
-    padding: "10px",
-    borderRadius: 999,
-    border: "1px solid #ddd",
-    color: "#000",
-    textDecoration: "none",
-    marginBottom: 12,
+  pluginWrap: {
+    padding: "0 12px 12px",
   },
-  fomo: {
-    fontSize: 13,
-    color: "#777",
+  footer: {
     display: "flex",
     justifyContent: "center",
-    gap: 6,
+    gap: 8,
+    padding: "10px 16px 16px",
+    fontSize: 12,
+    color: "#536471",
+  },
+  dot: {
+    opacity: 0.5,
   },
 };
