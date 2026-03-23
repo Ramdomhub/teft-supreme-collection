@@ -10,9 +10,8 @@ const headers = {
 };
 
 const BASE_URL = "https://teft-supreme-collection.vercel.app";
-const INPUT_MINT = "So11111111111111111111111111111111111111112";
-const OUTPUT_MINT = "8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump";
-const AMOUNT_LAMPORTS = 100000000; // 0.1 SOL
+const INPUT_MINT = "So11111111111111111111111111111111111111112"; // SOL
+const OUTPUT_MINT = "8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump"; // TEFT
 
 export async function OPTIONS() {
   return new Response(null, { headers });
@@ -22,14 +21,22 @@ export async function GET() {
   return Response.json(
     {
       title: "Buy TEFT",
-      description: "Swap 0.1 SOL → TEFT",
+      description: "Swap SOL → TEFT via Jupiter",
       icon: `${BASE_URL}/teft.png`,
       label: "Buy TEFT",
       links: {
         actions: [
           {
-            label: "Buy with 0.1 SOL",
-            href: `${BASE_URL}/api/actions/teft-token`,
+            label: "Buy 0.1 SOL",
+            href: `${BASE_URL}/api/actions/teft-token?amount=0.1`,
+          },
+          {
+            label: "Buy 0.5 SOL",
+            href: `${BASE_URL}/api/actions/teft-token?amount=0.5`,
+          },
+          {
+            label: "Buy 1 SOL",
+            href: `${BASE_URL}/api/actions/teft-token?amount=1`,
           },
         ],
       },
@@ -50,9 +57,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const url = new URL(req.url);
+    const amountParam = url.searchParams.get("amount") || "0.1";
+    const amountSol = parseFloat(amountParam);
+
+    if (isNaN(amountSol) || amountSol <= 0) {
+      return new Response("Invalid amount", {
+        status: 400,
+        headers,
+      });
+    }
+
+    const amountLamports = Math.floor(amountSol * 1e9);
+
     const quoteRes = await fetch(
-      `https://quote-api.jup.ag/v6/quote?inputMint=${INPUT_MINT}&outputMint=${OUTPUT_MINT}&amount=${AMOUNT_LAMPORTS}&slippageBps=50`,
-      { cache: "no-store" }
+      `https://quote-api.jup.ag/v6/quote?inputMint=${INPUT_MINT}&outputMint=${OUTPUT_MINT}&amount=${amountLamports}&slippageBps=50`,
+      {
+        cache: "no-store",
+      }
     );
 
     if (!quoteRes.ok) {
@@ -100,7 +122,7 @@ export async function POST(req: NextRequest) {
     return Response.json(
       {
         transaction: swapData.swapTransaction,
-        message: "Swap 0.1 SOL → TEFT",
+        message: `Swap ${amountSol} SOL → TEFT`,
       },
       { headers }
     );
