@@ -9,8 +9,20 @@ const headers = {
   "X-Blockchain-Ids": "solana:mainnet-beta",
 };
 
+const BASE_URL = "https://teft-supreme-collection.vercel.app";
 const MINT = "FBduFJSWcfExLLDyxzeiaB64Dh85KDKiFbN6DXsH6xzz";
-const IMAGE_URL = "https://teft-supreme-collection.vercel.app/teft.png";
+const FALLBACK_IMAGE = `${BASE_URL}/teft.png`;
+
+type Listing = {
+  price?: number;
+  seller?: string;
+  auctionHouse?: string;
+};
+
+type TokenMeta = {
+  name?: string;
+  image?: string;
+};
 
 export async function OPTIONS() {
   return new Response(null, { headers });
@@ -18,6 +30,7 @@ export async function OPTIONS() {
 
 export async function GET() {
   try {
+    // 1) Aktuelles Listing holen (öffentlich)
     const listingRes = await fetch(
       `https://api-mainnet.magiceden.dev/v2/tokens/${MINT}/listings`,
       {
@@ -32,38 +45,55 @@ export async function GET() {
       throw new Error(`Listings fetch failed: ${listingRes.status}`);
     }
 
-    const listings = await listingRes.json();
-    const firstListing = Array.isArray(listings) ? listings[0] : null;
+    const listings = (await listingRes.json()) as Listing[];
+    const listing = Array.isArray(listings) ? listings[0] : undefined;
+    const price = listing?.price;
 
-    const price = firstListing?.price;
-    const seller = firstListing?.seller;
+    // 2) NFT-Metadaten holen (öffentlich)
+    const metaRes = await fetch(
+      `https://api-mainnet.magiceden.dev/v2/tokens/${MINT}`,
+      {
+        headers: {
+          accept: "application/json",
+        },
+        cache: "no-store",
+      }
+    );
 
-    const description =
-      typeof price === "number"
-        ? `Inside X. Current price: ${price} SOL`
-        : "Inside X. Currently unavailable";
+    if (!metaRes.ok) {
+      throw new Error(`Metadata fetch failed: ${metaRes.status}`);
+    }
+
+    const meta = (await metaRes.json()) as TokenMeta;
+
+    const name = meta?.name || "TEFT Supreme";
+    const image = meta?.image || FALLBACK_IMAGE;
+
+    const hasPrice = typeof price === "number";
 
     return Response.json(
       {
-        title: "TEFT Supreme",
-        description,
-        icon: IMAGE_URL,
-        label: typeof price === "number" ? `Buy for ${price} SOL` : "Unavailable",
-        links: {
-          actions: typeof price === "number"
-            ? [
+        title: name,
+        description: hasPrice
+          ? `Buy now for ${price} SOL`
+          : "Currently not listed",
+        icon: image,
+        label: hasPrice ? `Buy for ${price} SOL` : "Unavailable",
+        disabled: !hasPrice,
+        links: hasPrice
+          ? {
+              actions: [
                 {
                   label: `Buy for ${price} SOL`,
-                  href: "https://teft-supreme-collection.vercel.app/api/actions/teft",
+                  href: `${BASE_URL}/api/actions/teft`,
                 },
-              ]
-            : [],
-        },
-        disabled: typeof price !== "number",
+              ],
+            }
+          : undefined,
         extras: {
           mint: MINT,
-          seller: seller ?? null,
-          price: price ?? null,
+          price: hasPrice ? price : null,
+          seller: listing?.seller ?? null,
         },
       },
       { headers }
@@ -74,8 +104,8 @@ export async function GET() {
     return Response.json(
       {
         title: "TEFT Supreme",
-        description: "Inside X. Price currently unavailable",
-        icon: IMAGE_URL,
+        description: "NFT data currently unavailable",
+        icon: FALLBACK_IMAGE,
         label: "Unavailable",
         disabled: true,
       },
@@ -93,6 +123,7 @@ export async function POST(req: NextRequest) {
       return new Response("Missing wallet", { status: 400, headers });
     }
 
+    // 1) Aktuelles Listing holen
     const listingRes = await fetch(
       `https://api-mainnet.magiceden.dev/v2/tokens/${MINT}/listings`,
       {
@@ -104,7 +135,16 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const listings = await listingRes.json();
+    if (!listingRes.ok) {
+      const text = await listingRes.text();
+      console.error("Listing fetch failed:", text);
+      return new Response("Failed to fetch listing", {
+        status: 500,
+        headers,
+      });
+    }
+
+    const listings = (await listingRes.json()) as Listing[];
 
     if (!Array.isArray(listings) || listings.length === 0) {
       return new Response("No listing found", { status: 400, headers });
@@ -112,6 +152,18 @@ export async function POST(req: NextRequest) {
 
     const listing = listings[0];
 
+    if (
+      typeof listing.price !== "number" ||
+      !listing.seller ||
+      !listing.auctionHouse
+    ) {
+      return new Response("Incomplete listing data", {
+        status: 400,
+        headers,
+      });
+    }
+
+    // 2) Buy-Instruction holen
     const buyRes = await fetch(
       "https://api-mainnet.magiceden.dev/v2/instructions/buy_now",
       {
@@ -130,20 +182,34 @@ export async function POST(req: NextRequest) {
       }
     );
 
+    if (!buyRes.ok) {
+      const text = await buyRes.text();
+      console.error("Buy instruction failed:", text);
+      return new Response("Failed to create buy transaction", {
+        status: 500,
+        headers,
+      });
+    }
+
     const data = await buyRes.json();
+
+    if (!data?.tx) {
+      console.error("Unexpected buy response:", data);
+      return new Response("Missing transaction in response", {
+        status: 500,
+        headers,
+      });
+    }
 
     return Response.json(
       {
         transaction: data.tx,
-        message:
-          typeof listing.price === "number"
-            ? `Buy TEFT NFT for ${listing.price} SOL`
-            : "Buy TEFT NFT",
+        message: `Buy TEFT NFT for ${listing.price} SOL`,
       },
       { headers }
     );
-  } catch (e) {
-    console.error("POST action error:", e);
+  } catch (error) {
+    console.error("POST action error:", error);
     return new Response("Error", { status: 500, headers });
   }
 }
