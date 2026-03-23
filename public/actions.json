@@ -1,0 +1,8 @@
+{
+  "rules": [
+    {
+      "pathPattern": "/teft",
+      "apiPath": "/api/actions/teft"
+    }
+  ]
+}
