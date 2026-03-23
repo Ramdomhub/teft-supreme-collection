@@ -70,49 +70,32 @@ export async function POST(req: NextRequest) {
 
     const amountLamports = Math.floor(amountSol * 1e9);
 
-    // Current free/public quote endpoint
-    const quoteRes = await fetch(
-      `https://lite-api.jup.ag/swap/v1/quote?inputMint=${INPUT_MINT}&outputMint=${OUTPUT_MINT}&amount=${amountLamports}&slippageBps=50`,
-      { cache: "no-store" }
-    );
+    // Jupiter Ultra order endpoint
+    const orderUrl =
+      `https://lite-api.jup.ag/ultra/v1/order` +
+      `?inputMint=${INPUT_MINT}` +
+      `&outputMint=${OUTPUT_MINT}` +
+      `&amount=${amountLamports}` +
+      `&taker=${account}`;
 
-    if (!quoteRes.ok) {
-      const text = await quoteRes.text();
-      console.error("Quote error:", text);
+    const orderRes = await fetch(orderUrl, {
+      cache: "no-store",
+    });
+
+    if (!orderRes.ok) {
+      const text = await orderRes.text();
+      console.error("Ultra order error:", text);
       return new Response("Failed to fetch quote", {
         status: 500,
         headers,
       });
     }
 
-    const quote = await quoteRes.json();
+    const order = await orderRes.json();
 
-    // Current free/public swap endpoint
-    const swapRes = await fetch("https://lite-api.jup.ag/swap/v1/swap", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        quoteResponse: quote,
-        userPublicKey: account,
-        wrapAndUnwrapSol: true,
-      }),
-    });
-
-    if (!swapRes.ok) {
-      const text = await swapRes.text();
-      console.error("Swap error:", text);
-      return new Response("Failed to create swap transaction", {
-        status: 500,
-        headers,
-      });
-    }
-
-    const swapData = await swapRes.json();
-
-    if (!swapData?.swapTransaction) {
-      console.error("Missing swapTransaction:", swapData);
+    // Ultra returns a base64 tx under `transaction`
+    if (!order?.transaction) {
+      console.error("Missing transaction in Ultra order response:", order);
       return new Response("No transaction returned", {
         status: 500,
         headers,
@@ -121,7 +104,7 @@ export async function POST(req: NextRequest) {
 
     return Response.json(
       {
-        transaction: swapData.swapTransaction,
+        transaction: order.transaction,
         message: `Swap ${amountSol} SOL → TEFT`,
       },
       { headers }
