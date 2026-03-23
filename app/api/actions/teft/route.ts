@@ -5,6 +5,8 @@ const headers = {
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
   "Access-Control-Allow-Headers":
     "Content-Type, Authorization, Content-Encoding, Accept-Encoding",
+  "X-Action-Version": "1.0.0",
+  "X-Blockchain-Ids": "solana:mainnet-beta",
 };
 
 // OPTIONS (CORS)
