@@ -28,7 +28,7 @@ export default function Page() {
 
   return (
     <main style={styles.page}>
-      <div style={styles.frame}>
+      <div style={styles.wrapper}>
         <div style={styles.card}>
           <img src="/teft.png" alt="TEFT" style={styles.image} />
 
@@ -73,30 +73,15 @@ export default function Page() {
             </div>
 
             <div style={styles.links}>
-              <a
-                href={LINKS.x}
-                target="_blank"
-                rel="noreferrer"
-                style={styles.link}
-              >
+              <a href={LINKS.x} target="_blank" rel="noreferrer" style={styles.link}>
                 X
               </a>
               <span style={styles.dot}>·</span>
-              <a
-                href={LINKS.site}
-                target="_blank"
-                rel="noreferrer"
-                style={styles.link}
-              >
+              <a href={LINKS.site} target="_blank" rel="noreferrer" style={styles.link}>
                 www.teftlegion.io
               </a>
               <span style={styles.dot}>·</span>
-              <a
-                href={LINKS.tg}
-                target="_blank"
-                rel="noreferrer"
-                style={styles.link}
-              >
+              <a href={LINKS.tg} target="_blank" rel="noreferrer" style={styles.link}>
                 Telegram
               </a>
             </div>
@@ -119,9 +104,10 @@ const baseButton: React.CSSProperties = {
 };
 
 const styles: Record<string, React.CSSProperties> = {
+  // 🔥 HELLER BACKGROUND wie Dialect
   page: {
     minHeight: "100vh",
-    background: "#050506",
+    background: "#f5f5f5",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -130,26 +116,22 @@ const styles: Record<string, React.CSSProperties> = {
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
 
-  // äußerer, sichtbarer Blink-Rahmen
-  frame: {
+  // 🔥 DAS ist der dicke weiße Rahmen
+  wrapper: {
     width: "100%",
-    maxWidth: 452,
-    borderRadius: 30,
-    padding: 6, // <- macht den Rand sichtbar dick
-    background: "rgba(255,255,255,0.18)",
-    boxShadow: `
-      0 0 0 2px rgba(255,255,255,0.08),
-      0 0 0 8px rgba(255,255,255,0.025),
-      0 18px 60px rgba(0,0,0,0.72),
-      0 0 28px rgba(255,255,255,0.12)
-    `,
+    maxWidth: 460,
+    background: "#ffffff",
+    borderRadius: 28,
+    padding: 14, // <- HIER entsteht der dicke Rand
+    boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
   },
 
+  // innere Card
   card: {
-    width: "100%",
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: "hidden",
     background: "#ffffff",
+    border: "1px solid #e6e6e6",
   },
 
   image: {
@@ -157,7 +139,6 @@ const styles: Record<string, React.CSSProperties> = {
     aspectRatio: "1 / 1",
     objectFit: "cover",
     display: "block",
-    borderBottom: "1px solid #eeeeee",
   },
 
   content: {
@@ -168,14 +149,13 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
     fontSize: 22,
     fontWeight: 700,
-    letterSpacing: "-0.03em",
-    color: "#111111",
+    color: "#111",
   },
 
   subtitle: {
     margin: "8px 0 18px",
     fontSize: 15,
-    color: "#5f6368",
+    color: "#666",
   },
 
   grid: {
@@ -187,40 +167,37 @@ const styles: Record<string, React.CSSProperties> = {
 
   primaryActionBtn: {
     ...baseButton,
-    background: "#111111",
-    color: "#ffffff",
+    background: "#111",
+    color: "#fff",
   },
 
   actionBtn: {
     ...baseButton,
     background: "#f3f3f3",
-    color: "#111111",
+    color: "#111",
   },
 
   meta: {
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
     gap: 6,
     fontSize: 13,
-    color: "#888888",
+    color: "#888",
     marginBottom: 10,
   },
 
   links: {
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
     gap: 8,
     fontSize: 13,
-    color: "#666666",
+    color: "#666",
     flexWrap: "wrap",
   },
 
   link: {
     textDecoration: "none",
-    color: "#444444",
-    fontWeight: 500,
+    color: "#444",
   },
 
   dot: {
