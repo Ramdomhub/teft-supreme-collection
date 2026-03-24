@@ -1,36 +1,28 @@
-import type { Metadata } from "next";
+export const metadata = {
+  metadataBase: new URL("https://www.teftlegion.com"),
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://teft-supreme-collection.vercel.app"),
   title: "TEFT",
-  description: "Explore the ecosystem",
+  description: "Access the TEFT ecosystem",
+
   openGraph: {
     title: "TEFT",
-    description: "Explore the ecosystem",
-    url: "/teft-token",
+    description: "Access the TEFT ecosystem",
+    url: "https://www.teftlegion.com/teft-token",
     siteName: "TEFT",
     images: [
       {
-        url: "/teft.png",
+        url: "/teft-preview.jpg",
         width: 1200,
-        height: 1200,
-        alt: "TEFT",
+        height: 630,
       },
     ],
     type: "website",
   },
+
   twitter: {
     card: "summary_large_image",
     title: "TEFT",
-    description: "Explore the ecosystem",
-    images: ["/teft.png"],
+    description: "Access the TEFT ecosystem",
+    images: ["/teft-preview.jpg"],
   },
 };
-
-export default function TeftTokenLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
-}
