@@ -131,7 +131,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 20,
     overflow: "hidden",
     background: "#ffffff",
-    border: "1px solid #e6e6e6",
   },
 
   image: {
