@@ -1,73 +1,53 @@
 "use client";
 
-import { useState } from "react";
-
 const TOKEN = "8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump";
-const SOL = "So11111111111111111111111111111111111111112";
+const PHANTOM = `https://phantom.com/tokens/solana/${TOKEN}`;
 
 export default function Page() {
-  const [amount, setAmount] = useState("0.01");
-
-  const jupiter = `https://jup.ag/swap?sell=${SOL}&buy=${TOKEN}`;
-
-  const preset = ["0.01", "0.05", "0.1"];
+  const buttons = ["Buy 0.01 SOL", "Buy 0.05 SOL", "Buy 0.1 SOL"];
 
   return (
     <main style={styles.page}>
       <div style={styles.card}>
-        <img src="/teft.png" style={styles.image} />
+        <img src="/teft.png" alt="TEFT" style={styles.image} />
 
-        <h1 style={styles.title}>Buy TEFT with SOL</h1>
-        <p style={styles.subtitle}>
-          Choose an amount or enter custom
-        </p>
+        <h1 style={styles.title}>Buy TEFT</h1>
+        <p style={styles.subtitle}>Open TEFT directly in Phantom.</p>
 
-        {/* Preset Buttons */}
         <div style={styles.row}>
-          {preset.map((p) => (
-            <button
-              key={p}
-              onClick={() => setAmount(p)}
-              style={{
-                ...styles.pill,
-                background: amount === p ? "#000" : "#f2f2f2",
-                color: amount === p ? "#fff" : "#000",
-              }}
+          {buttons.map((label) => (
+            <a
+              key={label}
+              href={PHANTOM}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.pill}
             >
-              {p} SOL
-            </button>
+              {label}
+            </a>
           ))}
         </div>
 
-        {/* Custom Input */}
-        <div style={styles.inputRow}>
-          <input
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            style={styles.input}
-            placeholder="Custom amount"
-          />
-
-          <a
-            href={`${jupiter}&amount=${amount}`}
-            target="_blank"
-            style={styles.buy}
-          >
-            Buy TEFT
-          </a>
-        </div>
+        <a
+          href={PHANTOM}
+          target="_blank"
+          rel="noreferrer"
+          style={styles.buy}
+        >
+          Open in Phantom
+        </a>
 
         <div style={styles.fomo}>
-          <span>Live activity</span>
+          <span>Mobile ready</span>
           <span>•</span>
-          <span>Price moving</span>
+          <span>Neutral wallet flow</span>
         </div>
       </div>
     </main>
   );
 }
 
-const styles: any = {
+const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background: "#fff",
@@ -76,7 +56,7 @@ const styles: any = {
     alignItems: "center",
     padding: 20,
     fontFamily:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto',
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
   card: {
     width: "100%",
@@ -84,19 +64,25 @@ const styles: any = {
     border: "1px solid #e6e6e6",
     borderRadius: 16,
     padding: 16,
+    background: "#fff",
   },
   image: {
     width: "100%",
     borderRadius: 12,
     marginBottom: 12,
+    display: "block",
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 600,
+    margin: 0,
+    marginBottom: 4,
+    color: "#000",
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
+    color: "#555",
+    margin: 0,
     marginBottom: 16,
   },
   row: {
@@ -106,33 +92,28 @@ const styles: any = {
   },
   pill: {
     flex: 1,
-    padding: "10px",
+    padding: "10px 6px",
+    background: "#f2f2f2",
+    color: "#000",
+    textAlign: "center",
     borderRadius: 999,
-    border: "none",
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-  inputRow: {
-    display: "flex",
-    gap: 8,
-    marginBottom: 12,
-  },
-  input: {
-    flex: 1,
-    padding: "10px",
-    borderRadius: 999,
-    border: "1px solid #ddd",
-  },
-  buy: {
-    padding: "10px 16px",
-    borderRadius: 999,
-    background: "#000",
-    color: "#fff",
     textDecoration: "none",
     fontWeight: 600,
+    fontSize: 13,
+  },
+  buy: {
+    display: "block",
+    textAlign: "center",
+    padding: "12px",
+    background: "#000",
+    color: "#fff",
+    borderRadius: 999,
+    textDecoration: "none",
+    fontWeight: 600,
+    marginBottom: 12,
   },
   fomo: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#777",
     display: "flex",
     justifyContent: "center",
