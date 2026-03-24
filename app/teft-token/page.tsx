@@ -2,16 +2,27 @@
 
 import { useState } from "react";
 
-const TOKEN = "8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump";
-const PHANTOM = `https://phantom.com/tokens/solana/${TOKEN}`;
+const LINKS = {
+  phantom: "https://phantom.com/tokens/solana/8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump",
+  nfts: "https://magiceden.io/", // ersetzen
+  staking: "https://solsuite.app/", // ersetzen
+  x: "https://x.com/DEIN_ACCOUNT",
+  site: "https://deine-seite.com",
+  tg: "https://t.me/deinchannel",
+};
 
 export default function Page() {
   const [pressed, setPressed] = useState<string | null>(null);
 
-  const buttons = ["0.01", "0.05", "0.1"];
-
   const pressIn = (key: string) => setPressed(key);
   const pressOut = () => setPressed(null);
+
+  const actions = [
+    { label: "Swap via Phantom", href: LINKS.phantom },
+    { label: "Get NFTs", href: LINKS.nfts },
+    { label: "NFT Staking", href: LINKS.staking },
+    { label: "View Project", href: LINKS.site },
+  ];
 
   return (
     <main style={styles.page}>
@@ -19,18 +30,18 @@ export default function Page() {
         <img src="/teft.png" alt="TEFT" style={styles.image} />
 
         <div style={styles.content}>
-          <h1 style={styles.title}>Buy TEFT</h1>
-          <p style={styles.subtitle}>Open TEFT directly in Phantom.</p>
+          <h1 style={styles.title}>TEFT</h1>
+          <p style={styles.subtitle}>Explore the ecosystem</p>
 
-          <div style={styles.row}>
-            {buttons.map((label) => {
-              const key = `pill-${label}`;
+          <div style={styles.grid}>
+            {actions.map((btn, i) => {
+              const key = `btn-${i}`;
               const isPressed = pressed === key;
 
               return (
                 <a
-                  key={label}
-                  href={PHANTOM}
+                  key={btn.label}
+                  href={btn.href}
                   target="_blank"
                   rel="noreferrer"
                   onMouseDown={() => pressIn(key)}
@@ -39,61 +50,29 @@ export default function Page() {
                   onTouchStart={() => pressIn(key)}
                   onTouchEnd={pressOut}
                   style={{
-                    ...styles.pill,
+                    ...styles.actionBtn,
                     transform: isPressed ? "scale(0.97)" : "scale(1)",
                     opacity: isPressed ? 0.9 : 1,
                   }}
                 >
-                  {label} SOL
+                  {btn.label}
                 </a>
               );
             })}
           </div>
 
-          <p style={styles.note}>Amount selected in Phantom</p>
-
-          <a
-            href={PHANTOM}
-            target="_blank"
-            rel="noreferrer"
-            onMouseDown={() => pressIn("main")}
-            onMouseUp={pressOut}
-            onMouseLeave={pressOut}
-            onTouchStart={() => pressIn("main")}
-            onTouchEnd={pressOut}
-            style={{
-              ...styles.buy,
-              transform: pressed === "main" ? "scale(0.985)" : "scale(1)",
-              opacity: pressed === "main" ? 0.93 : 1,
-            }}
-          >
-            Open in Phantom
-          </a>
-
           <div style={styles.meta}>
             <span>Mobile ready</span>
             <span style={styles.dot}>·</span>
-            <span>Neutral wallet flow</span>
+            <span>Phantom supported</span>
           </div>
 
-          <div style={styles.social}>
-            <a
-              href="https://x.com/DEIN_ACCOUNT"
-              target="_blank"
-              rel="noreferrer"
-              style={styles.socialLink}
-            >
-              X
-            </a>
+          <div style={styles.links}>
+            <a href={LINKS.x} target="_blank" style={styles.link}>X</a>
             <span style={styles.dot}>·</span>
-            <a
-              href="https://deine-seite.com"
-              target="_blank"
-              rel="noreferrer"
-              style={styles.socialLink}
-            >
-              Site
-            </a>
+            <a href={LINKS.site} target="_blank" style={styles.link}>Site</a>
+            <span style={styles.dot}>·</span>
+            <a href={LINKS.tg} target="_blank" style={styles.link}>Telegram</a>
           </div>
         </div>
       </div>
@@ -108,104 +87,77 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: "20px 16px",
+    padding: 16,
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
   card: {
     width: "100%",
-    maxWidth: 430,
-    background: "#fff",
-    border: "1px solid #ececec",
+    maxWidth: 420,
     borderRadius: 24,
+    border: "1px solid #eee",
     overflow: "hidden",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+    background: "#fff",
   },
   image: {
     width: "100%",
-    display: "block",
     aspectRatio: "1 / 1",
     objectFit: "cover",
   },
   content: {
-    padding: "18px 16px 20px",
+    padding: 16,
   },
   title: {
     margin: 0,
-    fontSize: 24,
-    lineHeight: 1.05,
-    fontWeight: 750,
-    color: "#0b0b0b",
-    letterSpacing: "-0.03em",
+    fontSize: 20,
+    fontWeight: 600,
+    letterSpacing: "-0.02em",
   },
   subtitle: {
-    margin: "8px 0 18px",
+    margin: "6px 0 16px",
     fontSize: 14,
-    lineHeight: 1.4,
-    color: "#6d6d6d",
+    color: "#666",
   },
-  row: {
+  grid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
+    gridTemplateColumns: "1fr 1fr",
     gap: 10,
-    marginBottom: 10,
+    marginBottom: 14,
   },
-  pill: {
+  actionBtn: {
+    padding: "12px 10px",
+    borderRadius: 14,
     background: "#f3f3f3",
+    textAlign: "center",
+    textDecoration: "none",
     color: "#111",
-    textDecoration: "none",
-    textAlign: "center",
-    padding: "12px 8px",
-    borderRadius: 999,
-    fontSize: 14,
-    fontWeight: 650,
-    transition: "transform 120ms ease, opacity 120ms ease",
-    WebkitTapHighlightColor: "transparent",
-  },
-  note: {
-    margin: "0 0 16px",
-    textAlign: "center",
-    fontSize: 12,
-    color: "#9a9a9a",
-  },
-  buy: {
-    display: "block",
-    textAlign: "center",
-    textDecoration: "none",
-    background: "#000",
-    color: "#fff",
-    padding: "15px 16px",
-    borderRadius: 999,
-    fontSize: 16,
-    fontWeight: 700,
-    marginBottom: 18,
-    transition: "transform 120ms ease, opacity 120ms ease",
+    fontSize: 13,
+    fontWeight: 600,
+    transition: "all 120ms ease",
     WebkitTapHighlightColor: "transparent",
   },
   meta: {
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
     gap: 6,
     fontSize: 13,
-    color: "#7f7f7f",
+    color: "#777",
     marginBottom: 8,
   },
-  social: {
+  links: {
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
     gap: 6,
     fontSize: 13,
-    color: "#7f7f7f",
+    color: "#777",
   },
-  socialLink: {
-    color: "#7f7f7f",
+  link: {
     textDecoration: "none",
+    color: "#777",
   },
   dot: {
     position: "relative",
     top: -1,
-    opacity: 0.7,
+    opacity: 0.6,
   },
 };
