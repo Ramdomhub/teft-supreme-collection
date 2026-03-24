@@ -52,7 +52,9 @@ export default function Page() {
                   onTouchStart={() => pressIn(key)}
                   onTouchEnd={pressOut}
                   style={{
-                    ...(btn.primary ? styles.primaryActionBtn : styles.actionBtn),
+                    ...(btn.primary
+                      ? styles.primaryActionBtn
+                      : styles.actionBtn),
                     transform: isPressed ? "scale(0.97)" : "scale(1)",
                     opacity: isPressed ? 0.9 : 1,
                   }}
@@ -70,12 +72,7 @@ export default function Page() {
           </div>
 
           <div style={styles.links}>
-            <a
-              href={LINKS.x}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.link}
-            >
+            <a href={LINKS.x} target="_blank" rel="noreferrer" style={styles.link}>
               X
             </a>
             <span style={styles.dot}>·</span>
@@ -110,14 +107,14 @@ const baseButton: React.CSSProperties = {
   textDecoration: "none",
   fontSize: 14,
   fontWeight: 650,
-  transition: "transform 120ms ease, opacity 120ms ease, background 120ms ease",
+  transition: "all 120ms ease",
   WebkitTapHighlightColor: "transparent",
 };
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#ffffff",
+    background: "#0b0b0c", // 🔥 DARK BACKGROUND
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -129,10 +126,10 @@ const styles: Record<string, React.CSSProperties> = {
     width: "100%",
     maxWidth: 440,
     borderRadius: 24,
-    border: "1px solid #e9e9e9",
+    border: "1px solid #1f1f1f",
     overflow: "hidden",
-    background: "#fff",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
+    background: "#ffffff", // Card bleibt hell → Kontrast!
+    boxShadow: "0 8px 30px rgba(0,0,0,0.35)", // 🔥 stärkerer Shadow
   },
   image: {
     width: "100%",
@@ -149,13 +146,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     letterSpacing: "-0.03em",
     color: "#111",
-    lineHeight: 1.05,
   },
   subtitle: {
     margin: "8px 0 18px",
     fontSize: 15,
     color: "#5f6368",
-    lineHeight: 1.35,
   },
   grid: {
     display: "grid",
@@ -165,13 +160,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   primaryActionBtn: {
     ...baseButton,
-    background: "#111111",
-    color: "#ffffff",
+    background: "#111",
+    color: "#fff",
   },
   actionBtn: {
     ...baseButton,
     background: "#f3f3f3",
-    color: "#111111",
+    color: "#111",
   },
   meta: {
     display: "flex",
@@ -179,7 +174,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 6,
     fontSize: 13,
-    color: "#7d7d7d",
+    color: "#888",
     marginBottom: 10,
   },
   links: {
@@ -193,12 +188,10 @@ const styles: Record<string, React.CSSProperties> = {
   },
   link: {
     textDecoration: "none",
-    color: "#555",
+    color: "#444",
     fontWeight: 500,
   },
   dot: {
-    position: "relative",
-    top: -1,
-    opacity: 0.55,
+    opacity: 0.5,
   },
 };
