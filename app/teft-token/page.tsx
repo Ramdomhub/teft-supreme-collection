@@ -72,7 +72,12 @@ export default function Page() {
           </div>
 
           <div style={styles.links}>
-            <a href={LINKS.x} target="_blank" rel="noreferrer" style={styles.link}>
+            <a
+              href={LINKS.x}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
               X
             </a>
             <span style={styles.dot}>·</span>
@@ -114,7 +119,7 @@ const baseButton: React.CSSProperties = {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#0b0b0c", // 🔥 DARK BACKGROUND
+    background: "#0b0b0c",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -126,16 +131,18 @@ const styles: Record<string, React.CSSProperties> = {
     width: "100%",
     maxWidth: 440,
     borderRadius: 24,
-    border: "1px solid #1f1f1f",
+    border: "1px solid rgba(255,255,255,0.08)",
     overflow: "hidden",
-    background: "#ffffff", // Card bleibt hell → Kontrast!
-    boxShadow: "0 8px 30px rgba(0,0,0,0.35)", // 🔥 stärkerer Shadow
+    background: "#ffffff",
+    boxShadow:
+      "0 10px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)",
   },
   image: {
     width: "100%",
     aspectRatio: "1 / 1",
     objectFit: "cover",
     display: "block",
+    borderBottom: "1px solid #eeeeee",
   },
   content: {
     padding: 18,
@@ -145,7 +152,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 22,
     fontWeight: 700,
     letterSpacing: "-0.03em",
-    color: "#111",
+    color: "#111111",
   },
   subtitle: {
     margin: "8px 0 18px",
@@ -160,13 +167,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   primaryActionBtn: {
     ...baseButton,
-    background: "#111",
-    color: "#fff",
+    background: "#111111",
+    color: "#ffffff",
   },
   actionBtn: {
     ...baseButton,
     background: "#f3f3f3",
-    color: "#111",
+    color: "#111111",
   },
   meta: {
     display: "flex",
@@ -174,7 +181,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 6,
     fontSize: 13,
-    color: "#888",
+    color: "#888888",
     marginBottom: 10,
   },
   links: {
@@ -183,12 +190,12 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 8,
     fontSize: 13,
-    color: "#666",
+    color: "#666666",
     flexWrap: "wrap",
   },
   link: {
     textDecoration: "none",
-    color: "#444",
+    color: "#444444",
     fontWeight: 500,
   },
   dot: {
