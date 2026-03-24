@@ -1,10 +1,17 @@
 "use client";
 
+import { useState } from "react";
+
 const TOKEN = "8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump";
 const PHANTOM = `https://phantom.com/tokens/solana/${TOKEN}`;
 
 export default function Page() {
+  const [pressed, setPressed] = useState<string | null>(null);
+
   const buttons = ["Buy 0.01", "Buy 0.05", "Buy 0.1"];
+
+  const pressIn = (key: string) => setPressed(key);
+  const pressOut = () => setPressed(null);
 
   return (
     <main style={styles.page}>
@@ -15,17 +22,31 @@ export default function Page() {
         <p style={styles.subtitle}>Open TEFT directly in Phantom.</p>
 
         <div style={styles.row}>
-          {buttons.map((label) => (
-            <a
-              key={label}
-              href={PHANTOM}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.pill}
-            >
-              {label}
-            </a>
-          ))}
+          {buttons.map((label) => {
+            const key = `pill-${label}`;
+            const isPressed = pressed === key;
+
+            return (
+              <a
+                key={label}
+                href={PHANTOM}
+                target="_blank"
+                rel="noreferrer"
+                onMouseDown={() => pressIn(key)}
+                onMouseUp={pressOut}
+                onMouseLeave={pressOut}
+                onTouchStart={() => pressIn(key)}
+                onTouchEnd={pressOut}
+                style={{
+                  ...styles.pill,
+                  transform: isPressed ? "scale(0.97)" : "scale(1)",
+                  opacity: isPressed ? 0.88 : 1,
+                }}
+              >
+                {label}
+              </a>
+            );
+          })}
         </div>
 
         <p style={styles.note}>Amount selected in Phantom</p>
@@ -34,32 +55,41 @@ export default function Page() {
           href={PHANTOM}
           target="_blank"
           rel="noreferrer"
-          style={styles.buy}
+          onMouseDown={() => pressIn("main")}
+          onMouseUp={pressOut}
+          onMouseLeave={pressOut}
+          onTouchStart={() => pressIn("main")}
+          onTouchEnd={pressOut}
+          style={{
+            ...styles.buy,
+            transform: pressed === "main" ? "scale(0.985)" : "scale(1)",
+            opacity: pressed === "main" ? 0.92 : 1,
+          }}
         >
           Open in Phantom
         </a>
 
-        <div style={styles.fomo}>
+        <div style={styles.footer}>
           <span>Mobile ready</span>
-          <span>•</span>
+          <span style={styles.dot}>·</span>
           <span>Neutral wallet flow</span>
         </div>
 
-        <div style={styles.social}>
+        <div style={styles.footer}>
           <a
-            href="https://x.com/TEFTofficial"
+            href="https://x.com/DEIN_ACCOUNT"
             target="_blank"
             rel="noreferrer"
-            style={styles.socialLink}
+            style={styles.footerLink}
           >
             X
           </a>
-          <span>•</span>
+          <span style={styles.dot}>·</span>
           <a
-            href="https://www.teftlegion.io/"
+            href="https://deine-seite.com"
             target="_blank"
             rel="noreferrer"
-            style={styles.socialLink}
+            style={styles.footerLink}
           >
             Site
           </a>
@@ -83,81 +113,89 @@ const styles: Record<string, React.CSSProperties> = {
   card: {
     width: "100%",
     maxWidth: 420,
-    border: "1px solid #e6e6e6",
-    borderRadius: 16,
+    border: "1px solid #e8e8e8",
+    borderRadius: 20,
     padding: 16,
     background: "#fff",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
   },
   image: {
     width: "100%",
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: 14,
+    marginBottom: 14,
     display: "block",
   },
   title: {
-    fontSize: 20,
-    fontWeight: 600,
+    fontSize: 22,
+    lineHeight: 1.1,
+    fontWeight: 700,
     margin: 0,
-    marginBottom: 4,
+    marginBottom: 6,
     color: "#000",
+    letterSpacing: "-0.02em",
   },
   subtitle: {
     fontSize: 14,
-    color: "#555",
+    lineHeight: 1.4,
+    color: "#5f6368",
     margin: 0,
     marginBottom: 16,
   },
   row: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr 1fr",
-    gap: 8,
+    gap: 10,
     marginBottom: 10,
   },
   pill: {
-    padding: "10px 6px",
-    background: "#f2f2f2",
+    padding: "11px 8px",
+    background: "#f3f3f3",
     color: "#000",
     textAlign: "center",
     borderRadius: 999,
     textDecoration: "none",
-    fontWeight: 600,
+    fontWeight: 700,
     fontSize: 13,
+    transition: "transform 120ms ease, opacity 120ms ease, background 120ms ease",
+    WebkitTapHighlightColor: "transparent",
   },
   note: {
     fontSize: 12,
-    color: "#888",
+    color: "#8b8b8b",
     textAlign: "center",
     margin: 0,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   buy: {
     display: "block",
     textAlign: "center",
-    padding: "12px",
+    padding: "14px 16px",
     background: "#000",
     color: "#fff",
     borderRadius: 999,
     textDecoration: "none",
-    fontWeight: 600,
-    marginBottom: 12,
+    fontWeight: 700,
+    fontSize: 16,
+    marginBottom: 16,
+    transition: "transform 120ms ease, opacity 120ms ease",
+    WebkitTapHighlightColor: "transparent",
   },
-  fomo: {
-    fontSize: 13,
-    color: "#777",
+  footer: {
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     gap: 6,
-    marginBottom: 12,
+    fontSize: 13,
+    color: "#7b7b7b",
+    marginTop: 6,
   },
-  social: {
-    display: "flex",
-    justifyContent: "center",
-    gap: 8,
-    fontSize: 12,
-    color: "#888",
-  },
-  socialLink: {
-    color: "#888",
+  footerLink: {
+    color: "#7b7b7b",
     textDecoration: "none",
+  },
+  dot: {
+    position: "relative",
+    top: -1,
+    opacity: 0.7,
   },
 };
