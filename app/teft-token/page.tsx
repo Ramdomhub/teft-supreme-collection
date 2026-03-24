@@ -8,7 +8,7 @@ const PHANTOM = `https://phantom.com/tokens/solana/${TOKEN}`;
 export default function Page() {
   const [pressed, setPressed] = useState<string | null>(null);
 
-  const buttons = ["Buy 0.01", "Buy 0.05", "Buy 0.1"];
+  const buttons = ["0.01", "0.05", "0.1"];
 
   const pressIn = (key: string) => setPressed(key);
   const pressOut = () => setPressed(null);
@@ -18,81 +18,83 @@ export default function Page() {
       <div style={styles.card}>
         <img src="/teft.png" alt="TEFT" style={styles.image} />
 
-        <h1 style={styles.title}>Buy TEFT</h1>
-        <p style={styles.subtitle}>Open TEFT directly in Phantom.</p>
+        <div style={styles.content}>
+          <h1 style={styles.title}>Buy TEFT</h1>
+          <p style={styles.subtitle}>Open TEFT directly in Phantom.</p>
 
-        <div style={styles.row}>
-          {buttons.map((label) => {
-            const key = `pill-${label}`;
-            const isPressed = pressed === key;
+          <div style={styles.row}>
+            {buttons.map((label) => {
+              const key = `pill-${label}`;
+              const isPressed = pressed === key;
 
-            return (
-              <a
-                key={label}
-                href={PHANTOM}
-                target="_blank"
-                rel="noreferrer"
-                onMouseDown={() => pressIn(key)}
-                onMouseUp={pressOut}
-                onMouseLeave={pressOut}
-                onTouchStart={() => pressIn(key)}
-                onTouchEnd={pressOut}
-                style={{
-                  ...styles.pill,
-                  transform: isPressed ? "scale(0.97)" : "scale(1)",
-                  opacity: isPressed ? 0.88 : 1,
-                }}
-              >
-                {label}
-              </a>
-            );
-          })}
-        </div>
+              return (
+                <a
+                  key={label}
+                  href={PHANTOM}
+                  target="_blank"
+                  rel="noreferrer"
+                  onMouseDown={() => pressIn(key)}
+                  onMouseUp={pressOut}
+                  onMouseLeave={pressOut}
+                  onTouchStart={() => pressIn(key)}
+                  onTouchEnd={pressOut}
+                  style={{
+                    ...styles.pill,
+                    transform: isPressed ? "scale(0.97)" : "scale(1)",
+                    opacity: isPressed ? 0.9 : 1,
+                  }}
+                >
+                  {label} SOL
+                </a>
+              );
+            })}
+          </div>
 
-        <p style={styles.note}>Amount selected in Phantom</p>
+          <p style={styles.note}>Amount selected in Phantom</p>
 
-        <a
-          href={PHANTOM}
-          target="_blank"
-          rel="noreferrer"
-          onMouseDown={() => pressIn("main")}
-          onMouseUp={pressOut}
-          onMouseLeave={pressOut}
-          onTouchStart={() => pressIn("main")}
-          onTouchEnd={pressOut}
-          style={{
-            ...styles.buy,
-            transform: pressed === "main" ? "scale(0.985)" : "scale(1)",
-            opacity: pressed === "main" ? 0.92 : 1,
-          }}
-        >
-          Open in Phantom
-        </a>
-
-        <div style={styles.footer}>
-          <span>Mobile ready</span>
-          <span style={styles.dot}>·</span>
-          <span>Neutral wallet flow</span>
-        </div>
-
-        <div style={styles.footer}>
           <a
-            href="https://x.com/DEIN_ACCOUNT"
+            href={PHANTOM}
             target="_blank"
             rel="noreferrer"
-            style={styles.footerLink}
+            onMouseDown={() => pressIn("main")}
+            onMouseUp={pressOut}
+            onMouseLeave={pressOut}
+            onTouchStart={() => pressIn("main")}
+            onTouchEnd={pressOut}
+            style={{
+              ...styles.buy,
+              transform: pressed === "main" ? "scale(0.985)" : "scale(1)",
+              opacity: pressed === "main" ? 0.93 : 1,
+            }}
           >
-            X
+            Open in Phantom
           </a>
-          <span style={styles.dot}>·</span>
-          <a
-            href="https://deine-seite.com"
-            target="_blank"
-            rel="noreferrer"
-            style={styles.footerLink}
-          >
-            Site
-          </a>
+
+          <div style={styles.meta}>
+            <span>Mobile ready</span>
+            <span style={styles.dot}>·</span>
+            <span>Neutral wallet flow</span>
+          </div>
+
+          <div style={styles.social}>
+            <a
+              href="https://x.com/DEIN_ACCOUNT"
+              target="_blank"
+              rel="noreferrer"
+              style={styles.socialLink}
+            >
+              X
+            </a>
+            <span style={styles.dot}>·</span>
+            <a
+              href="https://deine-seite.com"
+              target="_blank"
+              rel="noreferrer"
+              style={styles.socialLink}
+            >
+              Site
+            </a>
+          </div>
         </div>
       </div>
     </main>
@@ -106,40 +108,41 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: "20px 16px",
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
   card: {
     width: "100%",
-    maxWidth: 420,
-    border: "1px solid #e8e8e8",
-    borderRadius: 20,
-    padding: 16,
+    maxWidth: 430,
     background: "#fff",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+    border: "1px solid #ececec",
+    borderRadius: 24,
+    overflow: "hidden",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
   },
   image: {
     width: "100%",
-    borderRadius: 14,
-    marginBottom: 14,
     display: "block",
+    aspectRatio: "1 / 1",
+    objectFit: "cover",
+  },
+  content: {
+    padding: "18px 16px 20px",
   },
   title: {
-    fontSize: 22,
-    lineHeight: 1.1,
-    fontWeight: 700,
     margin: 0,
-    marginBottom: 6,
-    color: "#000",
-    letterSpacing: "-0.02em",
+    fontSize: 24,
+    lineHeight: 1.05,
+    fontWeight: 750,
+    color: "#0b0b0b",
+    letterSpacing: "-0.03em",
   },
   subtitle: {
+    margin: "8px 0 18px",
     fontSize: 14,
     lineHeight: 1.4,
-    color: "#5f6368",
-    margin: 0,
-    marginBottom: 16,
+    color: "#6d6d6d",
   },
   row: {
     display: "grid",
@@ -148,49 +151,56 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 10,
   },
   pill: {
-    padding: "11px 8px",
     background: "#f3f3f3",
-    color: "#000",
-    textAlign: "center",
-    borderRadius: 999,
+    color: "#111",
     textDecoration: "none",
-    fontWeight: 700,
-    fontSize: 13,
-    transition: "transform 120ms ease, opacity 120ms ease, background 120ms ease",
+    textAlign: "center",
+    padding: "12px 8px",
+    borderRadius: 999,
+    fontSize: 14,
+    fontWeight: 650,
+    transition: "transform 120ms ease, opacity 120ms ease",
     WebkitTapHighlightColor: "transparent",
   },
   note: {
-    fontSize: 12,
-    color: "#8b8b8b",
+    margin: "0 0 16px",
     textAlign: "center",
-    margin: 0,
-    marginBottom: 14,
+    fontSize: 12,
+    color: "#9a9a9a",
   },
   buy: {
     display: "block",
     textAlign: "center",
-    padding: "14px 16px",
+    textDecoration: "none",
     background: "#000",
     color: "#fff",
+    padding: "15px 16px",
     borderRadius: 999,
-    textDecoration: "none",
-    fontWeight: 700,
     fontSize: 16,
-    marginBottom: 16,
+    fontWeight: 700,
+    marginBottom: 18,
     transition: "transform 120ms ease, opacity 120ms ease",
     WebkitTapHighlightColor: "transparent",
   },
-  footer: {
+  meta: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     gap: 6,
     fontSize: 13,
-    color: "#7b7b7b",
-    marginTop: 6,
+    color: "#7f7f7f",
+    marginBottom: 8,
   },
-  footerLink: {
-    color: "#7b7b7b",
+  social: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 13,
+    color: "#7f7f7f",
+  },
+  socialLink: {
+    color: "#7f7f7f",
     textDecoration: "none",
   },
   dot: {
