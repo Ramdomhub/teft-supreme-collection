@@ -28,71 +28,78 @@ export default function Page() {
 
   return (
     <main style={styles.page}>
-      <div style={styles.card}>
-        <img src="/teft.png" alt="TEFT" style={styles.image} />
+      <div style={styles.frame}>
+        <div style={styles.card}>
+          <img src="/teft.png" alt="TEFT" style={styles.image} />
 
-        <div style={styles.content}>
-          <h1 style={styles.title}>TEFT</h1>
-          <p style={styles.subtitle}>Access the TEFT ecosystem</p>
+          <div style={styles.content}>
+            <h1 style={styles.title}>TEFT</h1>
+            <p style={styles.subtitle}>Access the TEFT ecosystem</p>
 
-          <div style={styles.grid}>
-            {actions.map((btn, i) => {
-              const key = `btn-${i}`;
-              const isPressed = pressed === key;
+            <div style={styles.grid}>
+              {actions.map((btn, i) => {
+                const key = `btn-${i}`;
+                const isPressed = pressed === key;
 
-              return (
-                <a
-                  key={btn.label}
-                  href={btn.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  onMouseDown={() => pressIn(key)}
-                  onMouseUp={pressOut}
-                  onMouseLeave={pressOut}
-                  onTouchStart={() => pressIn(key)}
-                  onTouchEnd={pressOut}
-                  style={{
-                    ...(btn.primary
-                      ? styles.primaryActionBtn
-                      : styles.actionBtn),
-                    transform: isPressed ? "scale(0.97)" : "scale(1)",
-                    opacity: isPressed ? 0.9 : 1,
-                  }}
-                >
-                  {btn.label}
-                </a>
-              );
-            })}
-          </div>
+                return (
+                  <a
+                    key={btn.label}
+                    href={btn.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    onMouseDown={() => pressIn(key)}
+                    onMouseUp={pressOut}
+                    onMouseLeave={pressOut}
+                    onTouchStart={() => pressIn(key)}
+                    onTouchEnd={pressOut}
+                    style={{
+                      ...(btn.primary
+                        ? styles.primaryActionBtn
+                        : styles.actionBtn),
+                      transform: isPressed ? "scale(0.97)" : "scale(1)",
+                      opacity: isPressed ? 0.9 : 1,
+                    }}
+                  >
+                    {btn.label}
+                  </a>
+                );
+              })}
+            </div>
 
-          <div style={styles.meta}>
-            <span>Mobile ready</span>
-            <span style={styles.dot}>·</span>
-            <span>Phantom supported</span>
-          </div>
+            <div style={styles.meta}>
+              <span>Mobile ready</span>
+              <span style={styles.dot}>·</span>
+              <span>Phantom supported</span>
+            </div>
 
-          <div style={styles.links}>
-            <a href={LINKS.x} target="_blank" rel="noreferrer" style={styles.link}>
-              X
-            </a>
-            <span style={styles.dot}>·</span>
-            <a
-              href={LINKS.site}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.link}
-            >
-              www.teftlegion.io
-            </a>
-            <span style={styles.dot}>·</span>
-            <a
-              href={LINKS.tg}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.link}
-            >
-              Telegram
-            </a>
+            <div style={styles.links}>
+              <a
+                href={LINKS.x}
+                target="_blank"
+                rel="noreferrer"
+                style={styles.link}
+              >
+                X
+              </a>
+              <span style={styles.dot}>·</span>
+              <a
+                href={LINKS.site}
+                target="_blank"
+                rel="noreferrer"
+                style={styles.link}
+              >
+                www.teftlegion.io
+              </a>
+              <span style={styles.dot}>·</span>
+              <a
+                href={LINKS.tg}
+                target="_blank"
+                rel="noreferrer"
+                style={styles.link}
+              >
+                Telegram
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -114,32 +121,35 @@ const baseButton: React.CSSProperties = {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#0b0b0c",
+    background: "#050506",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 24,
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
 
-  // 🔥 FINAL CARD LOOK (Blink / Jupiter Style)
+  // äußerer, sichtbarer Blink-Rahmen
+  frame: {
+    width: "100%",
+    maxWidth: 452,
+    borderRadius: 30,
+    padding: 6, // <- macht den Rand sichtbar dick
+    background: "rgba(255,255,255,0.18)",
+    boxShadow: `
+      0 0 0 2px rgba(255,255,255,0.08),
+      0 0 0 8px rgba(255,255,255,0.025),
+      0 18px 60px rgba(0,0,0,0.72),
+      0 0 28px rgba(255,255,255,0.12)
+    `,
+  },
+
   card: {
     width: "100%",
-    maxWidth: 440,
     borderRadius: 24,
     overflow: "hidden",
     background: "#ffffff",
-
-    // sichtbarer Rahmen
-    border: "1.5px solid rgba(255,255,255,0.18)",
-
-    // 🔥 Glow + Depth
-    boxShadow: `
-      0 0 0 2px rgba(255,255,255,0.06),
-      0 12px 40px rgba(0,0,0,0.6),
-      0 0 25px rgba(255,255,255,0.08)
-    `,
   },
 
   image: {
