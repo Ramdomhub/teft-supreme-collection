@@ -20,7 +20,7 @@ export default function Page() {
   const pressOut = () => setPressed(null);
 
   const actions = [
-    { label: "Swap via Phantom", href: LINKS.phantom },
+    { label: "Swap via Phantom", href: LINKS.phantom, primary: true },
     { label: "Get NFTs", href: LINKS.nfts },
     { label: "NFT Staking", href: LINKS.staking },
     { label: "View Project", href: LINKS.project },
@@ -33,7 +33,7 @@ export default function Page() {
 
         <div style={styles.content}>
           <h1 style={styles.title}>TEFT</h1>
-          <p style={styles.subtitle}>Explore the ecosystem</p>
+          <p style={styles.subtitle}>Access the TEFT ecosystem</p>
 
           <div style={styles.grid}>
             {actions.map((btn, i) => {
@@ -52,7 +52,7 @@ export default function Page() {
                   onTouchStart={() => pressIn(key)}
                   onTouchEnd={pressOut}
                   style={{
-                    ...styles.actionBtn,
+                    ...(btn.primary ? styles.primaryActionBtn : styles.actionBtn),
                     transform: isPressed ? "scale(0.97)" : "scale(1)",
                     opacity: isPressed ? 0.9 : 1,
                   }}
@@ -70,15 +70,30 @@ export default function Page() {
           </div>
 
           <div style={styles.links}>
-            <a href={LINKS.x} target="_blank" rel="noreferrer" style={styles.link}>
+            <a
+              href={LINKS.x}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
               X
             </a>
             <span style={styles.dot}>·</span>
-            <a href={LINKS.site} target="_blank" rel="noreferrer" style={styles.link}>
-              Site
+            <a
+              href={LINKS.site}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
+              www.teftlegion.io
             </a>
             <span style={styles.dot}>·</span>
-            <a href={LINKS.tg} target="_blank" rel="noreferrer" style={styles.link}>
+            <a
+              href={LINKS.tg}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
               Telegram
             </a>
           </div>
@@ -88,6 +103,17 @@ export default function Page() {
   );
 }
 
+const baseButton: React.CSSProperties = {
+  padding: "13px 12px",
+  borderRadius: 16,
+  textAlign: "center",
+  textDecoration: "none",
+  fontSize: 14,
+  fontWeight: 650,
+  transition: "transform 120ms ease, opacity 120ms ease, background 120ms ease",
+  WebkitTapHighlightColor: "transparent",
+};
+
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
@@ -95,17 +121,18 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: 16,
+    padding: 20,
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
   card: {
     width: "100%",
-    maxWidth: 420,
+    maxWidth: 440,
     borderRadius: 24,
-    border: "1px solid #eee",
+    border: "1px solid #e9e9e9",
     overflow: "hidden",
     background: "#fff",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
   },
   image: {
     width: "100%",
@@ -114,37 +141,37 @@ const styles: Record<string, React.CSSProperties> = {
     display: "block",
   },
   content: {
-    padding: 16,
+    padding: 18,
   },
   title: {
     margin: 0,
-    fontSize: 20,
-    fontWeight: 600,
-    letterSpacing: "-0.02em",
+    fontSize: 22,
+    fontWeight: 700,
+    letterSpacing: "-0.03em",
     color: "#111",
+    lineHeight: 1.05,
   },
   subtitle: {
-    margin: "6px 0 16px",
-    fontSize: 14,
-    color: "#666",
+    margin: "8px 0 18px",
+    fontSize: 15,
+    color: "#5f6368",
+    lineHeight: 1.35,
   },
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 16,
+  },
+  primaryActionBtn: {
+    ...baseButton,
+    background: "#111111",
+    color: "#ffffff",
   },
   actionBtn: {
-    padding: "12px 10px",
-    borderRadius: 14,
+    ...baseButton,
     background: "#f3f3f3",
-    textAlign: "center",
-    textDecoration: "none",
-    color: "#111",
-    fontSize: 13,
-    fontWeight: 600,
-    transition: "all 120ms ease",
-    WebkitTapHighlightColor: "transparent",
+    color: "#111111",
   },
   meta: {
     display: "flex",
@@ -152,24 +179,26 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 6,
     fontSize: 13,
-    color: "#777",
-    marginBottom: 8,
+    color: "#7d7d7d",
+    marginBottom: 10,
   },
   links: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
     fontSize: 13,
-    color: "#777",
+    color: "#666",
+    flexWrap: "wrap",
   },
   link: {
     textDecoration: "none",
-    color: "#777",
+    color: "#555",
+    fontWeight: 500,
   },
   dot: {
     position: "relative",
     top: -1,
-    opacity: 0.6,
+    opacity: 0.55,
   },
 };
