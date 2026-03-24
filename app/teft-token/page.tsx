@@ -8,7 +8,8 @@ const LINKS = {
   nfts: "https://magiceden.io/marketplace/teft_supreme",
   staking: "https://www.solsuite.io/teftsupreme",
   x: "https://x.com/TEFTofficial",
-  site: "https://www.teftlegion.io/blank-6",
+  site: "https://www.teftlegion.io",
+  project: "https://www.teftlegion.io/blank-6",
   tg: "https://t.me/teftlegionofficial",
 };
 
@@ -22,7 +23,7 @@ export default function Page() {
     { label: "Swap via Phantom", href: LINKS.phantom },
     { label: "Get NFTs", href: LINKS.nfts },
     { label: "NFT Staking", href: LINKS.staking },
-    { label: "View Project", href: LINKS.site },
+    { label: "View Project", href: LINKS.project },
   ];
 
   return (
@@ -69,30 +70,15 @@ export default function Page() {
           </div>
 
           <div style={styles.links}>
-            <a
-              href={LINKS.x}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.link}
-            >
+            <a href={LINKS.x} target="_blank" rel="noreferrer" style={styles.link}>
               X
             </a>
             <span style={styles.dot}>·</span>
-            <a
-              href={LINKS.site}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.link}
-            >
+            <a href={LINKS.site} target="_blank" rel="noreferrer" style={styles.link}>
               Site
             </a>
             <span style={styles.dot}>·</span>
-            <a
-              href={LINKS.tg}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.link}
-            >
+            <a href={LINKS.tg} target="_blank" rel="noreferrer" style={styles.link}>
               Telegram
             </a>
           </div>
