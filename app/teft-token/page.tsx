@@ -3,12 +3,13 @@
 import { useState } from "react";
 
 const LINKS = {
-  phantom: "https://phantom.com/tokens/solana/8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump",
-  nfts: "https://magiceden.io/", // ersetzen
-  staking: "https://solsuite.app/", // ersetzen
-  x: "https://x.com/DEIN_ACCOUNT",
-  site: "https://deine-seite.com",
-  tg: "https://t.me/deinchannel",
+  phantom:
+    "https://phantom.com/tokens/solana/8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump",
+  nfts: "https://magiceden.io/marketplace/teft_supreme",
+  staking: "https://www.solsuite.io/teftsupreme",
+  x: "https://x.com/TEFTofficial",
+  site: "https://www.teftlegion.io/blank-6",
+  tg: "https://t.me/teftlegionofficial",
 };
 
 export default function Page() {
@@ -68,11 +69,32 @@ export default function Page() {
           </div>
 
           <div style={styles.links}>
-            <a href={LINKS.x} target="_blank" style={styles.link}>X</a>
+            <a
+              href={LINKS.x}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
+              X
+            </a>
             <span style={styles.dot}>·</span>
-            <a href={LINKS.site} target="_blank" style={styles.link}>Site</a>
+            <a
+              href={LINKS.site}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
+              Site
+            </a>
             <span style={styles.dot}>·</span>
-            <a href={LINKS.tg} target="_blank" style={styles.link}>Telegram</a>
+            <a
+              href={LINKS.tg}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
+              Telegram
+            </a>
           </div>
         </div>
       </div>
@@ -103,6 +125,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: "100%",
     aspectRatio: "1 / 1",
     objectFit: "cover",
+    display: "block",
   },
   content: {
     padding: 16,
@@ -112,6 +135,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 20,
     fontWeight: 600,
     letterSpacing: "-0.02em",
+    color: "#111",
   },
   subtitle: {
     margin: "6px 0 16px",
@@ -139,6 +163,7 @@ const styles: Record<string, React.CSSProperties> = {
   meta: {
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     gap: 6,
     fontSize: 13,
     color: "#777",
@@ -147,6 +172,7 @@ const styles: Record<string, React.CSSProperties> = {
   links: {
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     gap: 6,
     fontSize: 13,
     color: "#777",
