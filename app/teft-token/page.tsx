@@ -4,7 +4,7 @@ const TOKEN = "8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump";
 const PHANTOM = `https://phantom.com/tokens/solana/${TOKEN}`;
 
 export default function Page() {
-  const buttons = ["Buy 0.01 SOL", "Buy 0.05 SOL", "Buy 0.1 SOL"];
+  const buttons = ["Buy 0.01", "Buy 0.05", "Buy 0.1"];
 
   return (
     <main style={styles.page}>
@@ -28,6 +28,8 @@ export default function Page() {
           ))}
         </div>
 
+        <p style={styles.note}>Amount selected in Phantom</p>
+
         <a
           href={PHANTOM}
           target="_blank"
@@ -42,6 +44,26 @@ export default function Page() {
           <span>•</span>
           <span>Neutral wallet flow</span>
         </div>
+
+        <div style={styles.social}>
+          <a
+            href="https://x.com/TEFTofficial"
+            target="_blank"
+            rel="noreferrer"
+            style={styles.socialLink}
+          >
+            X
+          </a>
+          <span>•</span>
+          <a
+            href="https://www.teftlegion.io/"
+            target="_blank"
+            rel="noreferrer"
+            style={styles.socialLink}
+          >
+            Site
+          </a>
+        </div>
       </div>
     </main>
   );
@@ -50,7 +72,7 @@ export default function Page() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#fff",
+    background: "#ffffff",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -86,12 +108,12 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 16,
   },
   row: {
-    display: "flex",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   pill: {
-    flex: 1,
     padding: "10px 6px",
     background: "#f2f2f2",
     color: "#000",
@@ -100,6 +122,13 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration: "none",
     fontWeight: 600,
     fontSize: 13,
+  },
+  note: {
+    fontSize: 12,
+    color: "#888",
+    textAlign: "center",
+    margin: 0,
+    marginBottom: 12,
   },
   buy: {
     display: "block",
@@ -118,5 +147,17 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     justifyContent: "center",
     gap: 6,
+    marginBottom: 12,
+  },
+  social: {
+    display: "flex",
+    justifyContent: "center",
+    gap: 8,
+    fontSize: 12,
+    color: "#888",
+  },
+  socialLink: {
+    color: "#888",
+    textDecoration: "none",
   },
 };
