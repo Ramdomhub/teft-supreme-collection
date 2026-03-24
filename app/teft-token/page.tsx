@@ -72,12 +72,7 @@ export default function Page() {
           </div>
 
           <div style={styles.links}>
-            <a
-              href={LINKS.x}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.link}
-            >
+            <a href={LINKS.x} target="_blank" rel="noreferrer" style={styles.link}>
               X
             </a>
             <span style={styles.dot}>·</span>
@@ -127,16 +122,26 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
+
+  // 🔥 FINAL CARD LOOK (Blink / Jupiter Style)
   card: {
     width: "100%",
     maxWidth: 440,
     borderRadius: 24,
-    border: "1px solid rgba(255,255,255,0.08)",
     overflow: "hidden",
     background: "#ffffff",
-    boxShadow:
-      "0 10px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)",
+
+    // sichtbarer Rahmen
+    border: "1.5px solid rgba(255,255,255,0.18)",
+
+    // 🔥 Glow + Depth
+    boxShadow: `
+      0 0 0 2px rgba(255,255,255,0.06),
+      0 12px 40px rgba(0,0,0,0.6),
+      0 0 25px rgba(255,255,255,0.08)
+    `,
   },
+
   image: {
     width: "100%",
     aspectRatio: "1 / 1",
@@ -144,9 +149,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: "block",
     borderBottom: "1px solid #eeeeee",
   },
+
   content: {
     padding: 18,
   },
+
   title: {
     margin: 0,
     fontSize: 22,
@@ -154,27 +161,32 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: "-0.03em",
     color: "#111111",
   },
+
   subtitle: {
     margin: "8px 0 18px",
     fontSize: 15,
     color: "#5f6368",
   },
+
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 10,
     marginBottom: 16,
   },
+
   primaryActionBtn: {
     ...baseButton,
     background: "#111111",
     color: "#ffffff",
   },
+
   actionBtn: {
     ...baseButton,
     background: "#f3f3f3",
     color: "#111111",
   },
+
   meta: {
     display: "flex",
     justifyContent: "center",
@@ -184,6 +196,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#888888",
     marginBottom: 10,
   },
+
   links: {
     display: "flex",
     justifyContent: "center",
@@ -193,11 +206,13 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#666666",
     flexWrap: "wrap",
   },
+
   link: {
     textDecoration: "none",
     color: "#444444",
     fontWeight: 500,
   },
+
   dot: {
     opacity: 0.5,
   },
