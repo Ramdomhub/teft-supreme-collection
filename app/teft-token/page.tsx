@@ -20,10 +20,10 @@ export default function Page() {
   const pressOut = () => setPressed(null);
 
   const actions = [
-    { label: "Swap via Phantom", href: LINKS.phantom, primary: true },
-    { label: "Get NFTs", href: LINKS.nfts },
-    { label: "NFT Staking", href: LINKS.staking },
-    { label: "View Project", href: LINKS.project },
+    { label: "Open in Phantom", href: LINKS.phantom, primary: true },
+    { label: "Explore NFTs", href: LINKS.nfts },
+    { label: "Stake NFTs", href: LINKS.staking },
+    { label: "About TEFT", href: LINKS.project },
   ];
 
   return (
@@ -33,8 +33,8 @@ export default function Page() {
           <img src="/teft.png" alt="TEFT" style={styles.image} />
 
           <div style={styles.content}>
-            <h1 style={styles.title}>TEFT</h1>
-            <p style={styles.subtitle}>Access the TEFT ecosystem</p>
+            <h1 style={styles.title}>TEFT Gateway</h1>
+            <p style={styles.subtitle}>Enter the TEFT ecosystem</p>
 
             <div style={styles.grid}>
               {actions.map((btn, i) => {
@@ -66,22 +66,39 @@ export default function Page() {
               })}
             </div>
 
+            <div style={styles.signal}>Built on Solana</div>
+
             <div style={styles.meta}>
               <span>Mobile ready</span>
               <span style={styles.dot}>·</span>
-              <span>Phantom supported</span>
+              <span>Wallet compatible</span>
             </div>
 
             <div style={styles.links}>
-              <a href={LINKS.x} target="_blank" rel="noreferrer" style={styles.link}>
+              <a
+                href={LINKS.x}
+                target="_blank"
+                rel="noreferrer"
+                style={styles.link}
+              >
                 X
               </a>
               <span style={styles.dot}>·</span>
-              <a href={LINKS.site} target="_blank" rel="noreferrer" style={styles.link}>
+              <a
+                href={LINKS.site}
+                target="_blank"
+                rel="noreferrer"
+                style={styles.link}
+              >
                 www.teftlegion.io
               </a>
               <span style={styles.dot}>·</span>
-              <a href={LINKS.tg} target="_blank" rel="noreferrer" style={styles.link}>
+              <a
+                href={LINKS.tg}
+                target="_blank"
+                rel="noreferrer"
+                style={styles.link}
+              >
                 Telegram
               </a>
             </div>
@@ -93,7 +110,7 @@ export default function Page() {
 }
 
 const baseButton: React.CSSProperties = {
-  padding: "13px 12px",
+  padding: "14px 12px",
   borderRadius: 16,
   textAlign: "center",
   textDecoration: "none",
@@ -104,7 +121,6 @@ const baseButton: React.CSSProperties = {
 };
 
 const styles: Record<string, React.CSSProperties> = {
-  // 🔥 HELLER BACKGROUND wie Dialect
   page: {
     minHeight: "100vh",
     background: "#f5f5f5",
@@ -116,17 +132,15 @@ const styles: Record<string, React.CSSProperties> = {
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
 
-  // 🔥 DAS ist der dicke weiße Rahmen
   wrapper: {
     width: "100%",
     maxWidth: 460,
     background: "#ffffff",
     borderRadius: 28,
-    padding: 14, // <- HIER entsteht der dicke Rand
+    padding: 14,
     boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
   },
 
-  // innere Card
   card: {
     borderRadius: 20,
     overflow: "hidden",
@@ -141,62 +155,75 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   content: {
-    padding: 18,
+    padding: 20,
   },
 
   title: {
     margin: 0,
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 700,
-    color: "#111",
+    color: "#111111",
+    letterSpacing: "-0.03em",
+    lineHeight: 1.05,
   },
 
   subtitle: {
     margin: "8px 0 18px",
     fontSize: 15,
-    color: "#666",
+    color: "#5f6368",
+    lineHeight: 1.35,
   },
 
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
 
   primaryActionBtn: {
     ...baseButton,
-    background: "#111",
-    color: "#fff",
+    background: "#111111",
+    color: "#ffffff",
   },
 
   actionBtn: {
     ...baseButton,
     background: "#f3f3f3",
-    color: "#111",
+    color: "#111111",
+  },
+
+  signal: {
+    textAlign: "center",
+    fontSize: 12,
+    color: "#8b8b8b",
+    marginBottom: 12,
   },
 
   meta: {
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     gap: 6,
     fontSize: 13,
-    color: "#888",
+    color: "#7f7f7f",
     marginBottom: 10,
   },
 
   links: {
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     gap: 8,
     fontSize: 13,
-    color: "#666",
+    color: "#666666",
     flexWrap: "wrap",
   },
 
   link: {
     textDecoration: "none",
-    color: "#444",
+    color: "#444444",
+    fontWeight: 500,
   },
 
   dot: {
