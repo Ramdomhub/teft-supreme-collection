@@ -4,9 +4,8 @@ import Link from "next/link";
 export default function Gateway() {
   return (
     <main className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-4 antialiased font-sans">
-      {/* Die Card ist jetzt kompakter (max-w-md entspricht ca. 400px) */}
       <div className="w-full max-w-[400px] bg-white rounded-[32px] p-[12px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col">
-        <div className="rounded-[24px] overflow-hidden aspect-square w-full">
+        <div className="rounded-[24px] overflow-hidden aspect-square w-full bg-zinc-100">
           <img src="/teft.png" alt="TEFT" className="w-full h-full object-cover" />
         </div>
         
@@ -18,7 +17,10 @@ export default function Gateway() {
             <a href="https://phantom.com/tokens/solana/8Zut3ywVRpWf73rsLHHckh3BRmXz4iKemcmx3nmPpump" target="_blank" className="bg-[#111] text-white py-3.5 rounded-[16px] text-[13px] font-bold text-center hover:opacity-90 transition-all">Swap via Phantom</a>
             <Link href="/teft-token" className="bg-[#efefef] text-black py-3.5 rounded-[16px] text-[13px] font-bold text-center hover:bg-zinc-200 transition-all">Get NFTs</Link>
             <a href="https://www.solsuite.io/teftsupreme" target="_blank" className="bg-[#efefef] text-black py-3.5 rounded-[16px] text-[13px] font-bold text-center">NFT Staking</a>
-            <a href="https://www.teftlegion.io/blank-6" target="_blank" className="bg-[#efefef] text-black py-3.5 rounded-[16px] text-[13px] font-bold text-center">View Project</a>
+            {/* NEUER PULSE BUTTON */}
+            <Link href="/pulse" className="bg-orange-500 text-white py-3.5 rounded-[16px] text-[13px] font-black text-center hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20">
+              TEFT PULSE ⚡️
+            </Link>
           </div>
 
           <div className="flex flex-col items-center gap-1.5">
