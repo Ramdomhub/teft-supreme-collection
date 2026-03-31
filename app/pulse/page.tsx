@@ -34,9 +34,7 @@ export default function TeftPulse() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  // NEU: Jupiter Insta-Buy Link
   const openJupiterSwap = (address: string) => {
-    // Später hängen wir hier deinen Referral-Code per URL oder Terminal dran!
     window.open(`https://jup.ag/swap/SOL-${address}`, '_blank');
   };
 
@@ -85,6 +83,41 @@ export default function TeftPulse() {
              </div>
           </div>
 
+          {/* DAS IST DER BLOCK, DEN ICH VORHIN VERLOREN HATTE! */}
+          {showOptions && (
+            <div className="p-6 bg-[#1a1d1e] border-b border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <ShieldAlert className="w-4 h-4 text-zinc-400" />
+                    <h3 className="text-white font-bold text-sm tracking-widest uppercase">Hard Filters (The Gate)</h3>
+                  </div>
+                  <ul className="space-y-2 text-sm text-zinc-400">
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Network:</span> Strictly Solana Native</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Age:</span> Max 10 min alt</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">MCap:</span> Hard filter $7k - $20k</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Volume:</span> Action over $5k required</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Security:</span> Mint Authority must be revoked</li>
+                  </ul>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Info className="w-4 h-4 text-orange-500" />
+                    <h3 className="text-white font-bold text-sm tracking-widest uppercase">Pulse Engine Scoring</h3>
+                  </div>
+                  <ul className="space-y-2 text-sm text-zinc-400">
+                    <li className="flex items-center gap-2"><span className="text-orange-500 font-black">+</span> <span className="text-zinc-200 font-medium">LP Burn:</span> Burned liquidity boosts score</li>
+                    <li className="flex items-center gap-2"><span className="text-orange-500 font-black">+</span> <span className="text-zinc-200 font-medium">Whale Check:</span> Top 10 holders under 30%</li>
+                    <li className="flex items-center gap-2"><span className="text-red-500 font-black">-</span> <span className="text-zinc-200 font-medium">Dump Risk:</span> Top 10 holders over 50%</li>
+                    <li className="flex items-center gap-2"><span className="text-orange-500 font-black">+</span> <span className="text-zinc-200 font-medium">Velocity:</span> High Volume to MCap ratio</li>
+                    <li className="flex items-center gap-2">👥 <span className="text-zinc-200 font-medium">Holders:</span> Tracked automatically</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* ENDE DES REPARIERTEN BLOCKS */}
+
           <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[650px]">
             <thead>
@@ -125,7 +158,6 @@ export default function TeftPulse() {
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    {/* HIER IST DAS UPDATE: Klick öffnet Jupiter direkt mit dem Token! */}
                     <div className="inline-flex rounded-lg overflow-hidden border border-white/5 shadow-lg group-hover:border-orange-500/50 group-hover:shadow-[0_0_15px_rgba(249,115,22,0.2)] transition-all cursor-pointer" onClick={() => openJupiterSwap(t.address)}>
                       <span className={`px-3 py-1.5 text-[11px] font-black uppercase tracking-tighter ${t.status === 'Strong' ? 'bg-[#1a2e26] text-[#4ade80]' : 'bg-[#2e2a1a] text-[#facc15]'}`}>
                         {t.status}
