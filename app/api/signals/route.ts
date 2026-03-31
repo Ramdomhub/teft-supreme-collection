@@ -13,36 +13,28 @@ export async function GET() {
 
     const processedSignals = data.pairs
       .map((p: any) => {
-        // 1. ABSOLUTE GRUNDBEDINGUNGEN (Nur Solana, Kein reines SOL)
         if (p.chainId !== 'solana') return null;
         if (p.baseToken.symbol === "SOL") return null;
 
         const mcap = p.fdv || 0;
         const vol24h = p.volume?.h24 || 0;
         
-        // --- DER HARTE TEFT-TÜRSTEHER ---
-        // Exaktes Fenster: Nur zwischen $7k und $20k MCap
-        if (mcap < 7000 || mcap > 20000) return null; 
-        
-        // Volumen muss über $5k liegen (Action-Check)
-        if (vol24h < 5000) return null; 
+        // --- BETA TEST FILTER (Weicher eingestellt zum Testen des UIs) ---
+        // Wenn du fertig mit Testen bist, mach hier wieder 7000 und 20000 draus!
+        if (mcap < 2000 || mcap > 100000) return null; 
+        if (vol24h < 1000) return null; 
 
-        // --- SIMULIERTE DEGEN-METRIKEN (Für Helius-Integration später) ---
-        const ageMinutes = Math.floor(Math.random() * 10) + 1; // Max 10 Min
+        const ageMinutes = Math.floor(Math.random() * 10) + 1; 
         const isMintRevoked = Math.random() > 0.2; 
         const top10HoldPct = Math.floor(Math.random() * 60) + 10;
         const isLpBurned = Math.random() > 0.4;
         const holdersCount = Math.floor(Math.random() * 400) + 50;
 
-        // Harter Alters- und Sicherheits-Check
-        if (ageMinutes > 10) return null;
+        if (ageMinutes > 15) return null; // Toleranz für Test leicht erhöht
         if (!isMintRevoked) return null;
 
-        // --- SCORING LOGIK (0-99) ---
         let score = 50;
-        
-        // Volumen/MCap Ratio (Bei Micro-Caps extrem wichtig)
-        if (vol24h > mcap * 0.5) score += 20; 
+        if (vol24h > mcap * 0.3) score += 20; 
         if (isLpBurned) score += 15;
         if (top10HoldPct < 30) score += 15;
         else if (top10HoldPct > 50) score -= 20;
@@ -61,7 +53,7 @@ export async function GET() {
           dexUrl: p.url
         };
       })
-      .filter(Boolean) // Wirft alle 'null' raus
+      .filter(Boolean) 
       .sort((a: any, b: any) => b.score - a.score)
       .slice(0, 15);
 
