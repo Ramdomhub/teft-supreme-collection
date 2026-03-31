@@ -1,10 +1,39 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info, ShieldAlert, Zap, Wallet, Droplets } from "lucide-react";
+import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info, ShieldAlert, Zap, Wallet, Droplets, Image } from "lucide-react";
 import Link from "next/link";
 import { Connection, VersionedTransaction } from '@solana/web3.js';
 
 const JUPITER_FEE_ACCOUNT = ""; 
+
+// Hilfs-Komponente, die das Tokenbild in Echtzeit lädt
+function TokenImage({ mint, fallbackLetter }: { mint: string; fallbackLetter: string }) {
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Wir fragen unsere eigene API nach den Helius-Metadaten
+    fetch(`/api/token-metadata?mint=${mint}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.image) setLogoUrl(data.image);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [mint]);
+
+  if (loading) return <div className="w-10 h-10 rounded-full bg-zinc-800 animate-pulse" />;
+  
+  if (logoUrl) {
+     return <img src={logoUrl} className="w-10 h-10 rounded-full object-cover border border-white/10 shadow-lg" alt="Logo" />;
+  }
+
+  return (
+    <div className="w-10 h-10 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 font-black text-xs uppercase shadow-lg">
+      {fallbackLetter}
+    </div>
+  );
+}
 
 export default function TeftPulse() {
   const [tokens, setTokens] = useState([]);
@@ -21,7 +50,6 @@ export default function TeftPulse() {
     setLoading(true);
     setErrorMessage(null);
     try {
-      // Suche nach pump.fun Tokens
       const response = await fetch('https://api.dexscreener.com/latest/dex/search?q=pump');
       if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
@@ -29,6 +57,7 @@ export default function TeftPulse() {
 
       if (data.pairs && data.pairs.length > 0) {
         const processed = data.pairs
+          // BUGFIX: SOL UND USDC RIGOROS AUSSCHLIESSEN
           .filter((p: any) => p.chainId === 'solana' && p.baseToken.symbol !== 'SOL' && p.baseToken.symbol !== 'USDC')
           .map((p: any) => {
             const mcap = p.fdv || 0;
@@ -42,8 +71,8 @@ export default function TeftPulse() {
               ageStr = mins > 60 ? `${Math.floor(mins/60)}h` : `${mins}m`;
             }
 
-            // ENTSPANNTES FILTERING FÜR DIE BETA: Fast alles darf rein!
-            if (mcap < 1000) return null; 
+            // Beta-Filter: 5k - 500k MCap
+            if (mcap < 5000 || mcap > 500000) return null; 
 
             let score = 50;
             if (vol24h > mcap * 0.1) score += 20; 
@@ -51,17 +80,18 @@ export default function TeftPulse() {
             score = Math.max(1, Math.min(99, score));
 
             return {
-              name: p.baseToken.name,
+              // HIER nutzen wir jetzt temporär den Ticker, echtes Enrichment passiert in der Komponente
+              name: p.baseToken.symbol, 
               ticker: p.baseToken.symbol,
               age: ageStr,
-              liquidity: `$${liquidity.toLocaleString()}`,
-              mcap: `$${mcap.toLocaleString()}`,
-              vol: `$${vol24h.toLocaleString()}`,
-              holders: Math.floor(Math.random() * 500) + 20,
+              liquidity: `$${liquidity.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+              mcap: `$${mcap.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+              vol: `$${vol24h.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+              holders: Math.floor(Math.random() * 500) + 20, // Simulierte Holders
               score: score,
               status: score >= 75 ? "Strong" : "Watch",
               dexUrl: p.url,
-              address: p.baseToken.address
+              address: p.baseToken.address // Die echte Contract-Adresse für Helius/Jupiter
             };
           })
           .filter(Boolean)
@@ -69,11 +99,11 @@ export default function TeftPulse() {
           .slice(0, 15);
 
         setTokens(processed);
-        if (processed.length === 0) setErrorMessage("Keine aktiven Token gefunden.");
+        if (processed.length === 0) setErrorMessage("Warte auf launches (5k-500k MCap)...");
       }
       setLastUpdate(new Date());
     } catch (error: any) {
-      setErrorMessage("Verbindung zu DexScreener unterbrochen.");
+      setErrorMessage("DexScreener API Timeout.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +112,7 @@ export default function TeftPulse() {
   useEffect(() => {
     setMounted(true);
     fetchSignals();
-    const interval = setInterval(fetchSignals, 20000);
+    const interval = setInterval(fetchSignals, 20000); // 20 Sek Sync
     return () => clearInterval(interval);
   }, []);
 
@@ -98,15 +128,20 @@ export default function TeftPulse() {
       if (!provider) return alert("Phantom?");
       await provider.connect();
       const lamports = Math.floor(parseFloat(tradeSize) * 10 ** 9);
-      const quote = await (await fetch(`https://lite-api.jup.ag/swap/v1/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${tokenAddress}&amount=${lamports}&slippageBps=500`)).json();
+      const quoteUrl = `https://lite-api.jup.ag/swap/v1/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${tokenAddress}&amount=${lamports}&slippageBps=500`;
+      const quote = await (await fetch(quoteUrl)).json();
+      if (quote.error) throw new Error(quote.error);
+
+      const swapBody = { quoteResponse: quote, userPublicKey: provider.publicKey.toString() };
       const { swapTransaction } = await (await fetch('https://lite-api.jup.ag/swap/v1/swap', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quoteResponse: quote, userPublicKey: provider.publicKey.toString() })
+          body: JSON.stringify(swapBody)
       })).json();
+      
       const transaction = VersionedTransaction.deserialize(Buffer.from(swapTransaction, 'base64'));
       const signed = await provider.signTransaction(transaction);
       const conn = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL || "https://api.mainnet-beta.solana.com");
-      const txid = await conn.sendRawTransaction(signed.serialize());
+      const txid = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
       alert(`TX: ${txid}`);
     } catch (e: any) { alert(e.message); } finally { setBuyingStatus(null); }
   };
@@ -138,9 +173,6 @@ export default function TeftPulse() {
                <input type="number" step="0.1" value={tradeSize} onChange={(e) => setTradeSize(e.target.value)} className="bg-transparent text-white w-12 font-bold outline-none text-sm" />
                <span className="text-[10px] font-black text-zinc-600 ml-2">SOL</span>
             </div>
-            <button onClick={() => window.location.reload()} className="p-3 bg-[#1a1d1e] rounded-xl border border-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all">
-                <Share2 className="w-4 h-4" />
-            </button>
             <a href="mailto:support@teftlegion.io" className="p-3 bg-[#1a1d1e] rounded-xl border border-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all">
                 <Mail className="w-4 h-4" />
             </a>
@@ -164,14 +196,14 @@ export default function TeftPulse() {
           </div>
 
           {showOptions && (
-            <div className="p-6 bg-[#1a1d1e] border-b border-white/5 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2">
+            <div className="p-6 bg-[#1a1d1e] border-b border-white/5 grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <h3 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2"><ShieldAlert className="w-3 h-3 text-orange-500" /> Filters</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">Scanning Pump.fun for launches between $5k and $500k. Only Solana Native pairs are shown.</p>
+                <p className="text-xs text-zinc-500 leading-relaxed">Scanning Pump.fun for launches between $5k and $500k. Strictly Solana Meme-Coins.</p>
               </div>
               <div>
-                <h3 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2"><Info className="w-3 h-3 text-blue-500" /> Scoring</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">Scores are calculated based on Volume/MCap ratio and Liquidity depth. {'>'}80 is considered Strong.</p>
+                <h3 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2"><Info className="w-3 h-3 text-blue-500" /> Technology</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">Market Data via DexScreener L1. Enrichment powered by Helius DAS API. Execution via Jupiter.</p>
               </div>
             </div>
           )}
@@ -183,24 +215,25 @@ export default function TeftPulse() {
                 <th className="px-6 py-4 font-black">Token Info</th>
                 <th className="px-4 py-4 font-black">Age</th>
                 <th className="px-4 py-4 font-black">MCap</th>
-                <th className="px-4 py-4 font-black">Velocity</th>
+                <th className="px-4 py-4 font-black">Liquidity</th>
                 <th className="px-6 py-4 font-black text-right">Execution</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {errorMessage && (
-                 <tr><td colSpan={5} className="py-20 text-center text-xs font-bold text-orange-500/50 uppercase tracking-widest bg-orange-500/5">{errorMessage}</td></tr>
+                 <tr><td colSpan={5} className="py-20 text-center text-xs font-bold text-orange-500/50 uppercase tracking-widest bg-orange-500/5">🚨 {errorMessage}</td></tr>
               )}
               {tokens.map((t: any, i) => (
                 <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 font-black text-xs">
-                        {t.ticker[0]}
-                      </div>
+                      {/* DIE NEUE TOKENIMAGE KOMPONENTE POWERED BY HELIUS DAS */}
+                      <TokenImage mint={t.address} fallbackLetter={t.ticker[0]} />
+                      
                       <div>
-                        <div className="text-sm font-black text-white group-hover:text-orange-500 transition-colors">{t.name}</div>
-                        <div className="flex gap-3 mt-1.5">
+                        {/* Auch den echten Namen holen wir uns später, jetzt nutzen wir den API Ticker */}
+                        <div className="text-sm font-black text-white group-hover:text-orange-400 transition-colors uppercase line-clamp-1">{t.name}</div>
+                        <div className="flex gap-3 mt-1.5 opacity-60">
                            <button onClick={() => shareToX(t)} className="text-[10px] text-zinc-500 hover:text-[#1da1f2] flex items-center gap-1 transition-colors font-bold uppercase"><Share2 className="w-3 h-3" /> Share</button>
                            <a href={t.dexUrl} target="_blank" className="text-[10px] text-zinc-500 hover:text-white flex items-center gap-1 transition-colors font-bold uppercase"><ExternalLink className="w-3 h-3" /> Chart</a>
                         </div>
@@ -210,10 +243,10 @@ export default function TeftPulse() {
                   <td className="px-4 py-5 text-sm font-bold text-white uppercase">{t.age}</td>
                   <td className="px-4 py-5 text-sm font-bold text-white">{t.mcap}</td>
                   <td className="px-4 py-5">
-                    <div className="text-sm font-bold text-white">{t.vol}</div>
+                    <div className="text-sm font-bold text-white">{t.liquidity}</div>
                     <div className="flex items-center gap-3 mt-1 opacity-50">
                        <span className="text-[10px] font-bold flex items-center gap-1 text-zinc-400"><Users className="w-3 h-3" /> {t.holders}</span>
-                       <span className="text-[10px] font-bold flex items-center gap-1 text-blue-400"><Droplets className="w-3 h-3" /> {t.liquidity}</span>
+                       <span className="text-[10px] font-bold flex items-center gap-1 text-zinc-500"><Zap className="w-3 h-3" /> {t.vol} Vol</span>
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
@@ -222,10 +255,10 @@ export default function TeftPulse() {
                       disabled={buyingStatus === t.ticker}
                       className="inline-flex rounded-lg overflow-hidden border border-white/10 shadow-xl group/btn disabled:opacity-50"
                     >
-                      <span className={`px-3 py-2 text-[10px] font-black uppercase tracking-tighter ${t.status === 'Strong' ? 'bg-green-500/10 text-green-500' : 'bg-zinc-800 text-zinc-400'}`}>
+                      <span className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-tighter ${t.status === 'Strong' ? 'bg-green-500/10 text-green-500' : 'bg-zinc-800 text-zinc-400'}`}>
                         {buyingStatus === t.ticker ? '...' : `${t.status} ${t.score}`}
                       </span>
-                      <span className="bg-orange-500 px-4 py-2 text-[10px] font-black text-black flex items-center gap-2 group-hover/btn:bg-orange-400 transition-colors">
+                      <span className="bg-orange-500 px-4 py-2.5 text-[10px] font-black text-black flex items-center gap-2 group-hover/btn:bg-orange-400 transition-colors">
                         <Zap className="w-3 h-3" /> BUY
                       </span>
                     </button>
@@ -236,9 +269,9 @@ export default function TeftPulse() {
           </table>
           </div>
         </div>
-        <p className="mt-8 text-center text-[9px] text-zinc-600 font-black uppercase tracking-[0.3em] leading-relaxed">
+        <p className="mt-10 text-center text-[9px] text-zinc-600 font-black uppercase tracking-[0.3em] leading-relaxed">
            Real-Time Analysis Powered by TEFT Legion Core <br/>
-           Data Source: DexScreener L1 Stream | Execution: Jupiter V1
+           Data: DexScreener L1 Stream | Enrichment: Helius DAS API | Execution: Jupiter V1
         </p>
       </div>
     </main>
