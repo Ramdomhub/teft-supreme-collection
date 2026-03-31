@@ -1,0 +1,12 @@
+{
+  "rules": [
+    {
+      "pathPattern": "/teft",
+      "apiPath": "/api/actions/teft"
+    },
+    {
+      "pathPattern": "/teft-token",
+      "apiPath": "/api/actions/teft-token"
+    }
+  ]
+}
