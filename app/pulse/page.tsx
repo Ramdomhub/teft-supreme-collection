@@ -1,110 +1,110 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, RefreshCw, ExternalLink, TrendingUp } from "lucide-react";
+import { ArrowLeft, Share2, MoreHorizontal, ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 export default function TeftPulse() {
-  const [tokens, setTokens] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
-
-  const fetchLivePulse = async () => {
-    setLoading(true);
-    try {
-      // Wir ziehen die aktuellsten Solana-Paare von DexScreener
-      const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/So11111111111111111111111111111111111111112');
-      const data = await response.json();
-      
-      if (data.pairs) {
-        // Wir filtern und sortieren nach Volumen
-        const sorted = data.pairs
-          .filter((p: any) => p.baseToken.symbol !== "SOL")
-          .slice(0, 10)
-          .map((p: any) => ({
-            name: p.baseToken.name,
-            symbol: p.baseToken.symbol,
-            price: p.priceUsd,
-            mcap: p.fdv,
-            vol: p.volume.h24,
-            url: p.url,
-            // Echte Signal-Logik: Score basierend auf Volume/MCap Ratio
-            score: Math.min(99, Math.floor((p.volume.h6 / p.fdv) * 1000) + 50)
-          }));
-        setTokens(sorted);
-      }
-      setLastUpdate(new Date());
-    } catch (error) {
-      console.error("Pulse Fetch Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLivePulse();
-    const interval = setInterval(fetchLivePulse, 30000); // Auto-Refresh alle 30 Sek
-    return () => clearInterval(interval);
-  }, []);
+  const [tokens, setTokens] = useState([
+    { name: "Mythos", ticker: "MTHOS", age: "2 min", mcap: "$17,340", vol: "$8,720", holders: "599", status: "Strong", score: 89 },
+    { name: "LaserDogs", ticker: "DOGS", age: "4 min", mcap: "$35,200", vol: "$7,210", holders: "441", status: "Watch", score: 71 },
+    { name: "SWAG Symbol", ticker: "SWAG", age: "3 min", mcap: "$12,880", vol: "$5,330", holders: "343", status: "Watch", score: 68 },
+    { name: "Sigma63", ticker: "SIGMA", age: "8 min", mcap: "$7,640", vol: "$4,960", holders: "277", status: "Watch", score: 66 },
+    { name: "Faded", ticker: "FADED", age: "4 min", mcap: "$25,900", vol: "$4,840", holders: "299", status: "Watch", score: 63 },
+  ]);
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-zinc-300 p-4 md:p-8 antialiased">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-end mb-8">
+    <main className="min-h-screen bg-[#0f1112] text-[#9ca3af] font-sans antialiased selection:bg-orange-500/30">
+      {/* HEADER IMAGE SECTION */}
+      <div className="relative w-full h-[400px] overflow-hidden">
+        <img src="/teft.png" className="w-full h-full object-cover opacity-40 grayscale-[0.5] contrast-[1.2]" alt="TEFT Background" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1112] via-transparent to-transparent" />
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+           <Link href="/" className="bg-black/40 backdrop-blur-md border border-white/10 px-8 py-3 rounded-xl text-white font-bold hover:bg-white/10 transition-all uppercase tracking-widest text-sm">
+              Enter Gateway
+           </Link>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-6 -mt-16 relative z-10 pb-20">
+        {/* TITLE SECTION */}
+        <div className="flex justify-between items-start mb-8">
           <div>
-            <Link href="/" className="text-zinc-500 text-sm font-bold hover:text-white flex items-center mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Gateway
-            </Link>
-            <h1 className="text-4xl font-black text-white tracking-tighter italic">TEFT PULSE</h1>
-            <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest mt-1">Real-Time Solana Alpha</p>
+            <h1 className="text-4xl font-bold text-white tracking-tight">TEFT Pulse</h1>
+            <p className="text-zinc-500 text-lg mt-1 font-medium">See what others don't.</p>
           </div>
-          <button onClick={fetchLivePulse} className="bg-white/5 p-3 rounded-xl border border-white/10 hover:bg-white/10 transition-all">
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex bg-[#1a1d1e] rounded-xl p-1 border border-white/5 shadow-2xl">
+             <button className="px-4 py-1.5 bg-[#2a2d2e] text-white rounded-lg text-sm font-bold flex items-center gap-2">
+                <Share2 className="w-3.5 h-3.5" /> Feed
+             </button>
+             <button className="px-4 py-1.5 text-zinc-500 text-sm font-bold">Options</button>
+             <button className="px-4 py-1.5 text-zinc-700 text-xs font-bold uppercase tracking-widest">soon</button>
+          </div>
         </div>
 
-        <div className="bg-zinc-900/40 border border-white/5 rounded-[32px] overflow-hidden backdrop-blur-md shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] uppercase tracking-[0.2em] text-zinc-600 border-b border-white/5 bg-white/[0.02]">
-                  <th className="px-8 py-5">Pair</th>
-                  <th className="px-4 py-5">Price</th>
-                  <th className="px-4 py-5">Market Cap</th>
-                  <th className="px-4 py-5">24h Vol</th>
-                  <th className="px-8 py-5 text-right">Pulse Score</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {tokens.map((t: any, i) => (
-                  <tr key={i} className="hover:bg-white/[0.02] transition-all">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-black text-black">
-                          {t.symbol[0]}
-                        </div>
-                        <div>
-                          <div className="text-white font-bold text-sm">{t.symbol}</div>
-                          <div className="text-[10px] text-zinc-500">{t.name}</div>
+        {/* TERMINAL TABLE */}
+        <div className="bg-[#161819] rounded-2xl border border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden">
+          <div className="flex justify-between items-center px-6 py-4 border-b border-white/5">
+             <div className="flex gap-8 text-[13px] font-bold uppercase tracking-wider">
+                <span className="text-white border-b border-orange-500 pb-4 -mb-4">Feed</span>
+                <span className="text-zinc-600">Options</span>
+                <span className="text-zinc-800 flex items-center gap-1"><ChevronDown className="w-3 h-3"/> soon</span>
+             </div>
+             <div className="text-[11px] text-zinc-600 font-bold uppercase tracking-widest">Updated 16 seconds ago</div>
+          </div>
+
+          <table className="w-full text-left">
+            <thead>
+              <tr className="text-[11px] text-zinc-600 uppercase tracking-widest border-b border-white/5">
+                <th className="px-6 py-5 font-bold">Token</th>
+                <th className="px-4 py-5 font-bold flex items-center gap-1">Age <ChevronDown className="w-3 h-3" /></th>
+                <th className="px-4 py-5 font-bold flex items-center gap-1">MCap <ChevronDown className="w-3 h-3" /></th>
+                <th className="px-4 py-5 font-bold flex items-center gap-1">Volume <ChevronDown className="w-3 h-3" /></th>
+                <th className="px-6 py-5 font-bold text-right">Signal</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {tokens.map((t, i) => (
+                <tr key={i} className="hover:bg-white/[0.02] transition-all cursor-pointer group">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-black/40 border border-white/10 flex items-center justify-center overflow-hidden">
+                        <div className="text-white font-bold text-xs uppercase tracking-tighter">{t.ticker[0]}</div>
+                      </div>
+                      <div>
+                        <div className="text-[15px] font-bold text-white group-hover:text-orange-400 transition-colors">{t.name} <span className="text-[10px] text-zinc-600 ml-1 uppercase">{t.ticker}</span></div>
+                        <div className="flex gap-2 mt-0.5">
+                           <div className="w-3 h-3 bg-zinc-800 rounded flex items-center justify-center text-[8px]">𝕏</div>
+                           <div className="w-3 h-3 bg-zinc-800 rounded flex items-center justify-center text-[8px]">✈</div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-6 font-mono text-sm text-green-400">${Number(t.price).toFixed(6)}</td>
-                    <td className="px-4 py-6 font-bold text-zinc-200 text-sm">${Number(t.mcap).toLocaleString()}</td>
-                    <td className="px-4 py-6 font-medium text-zinc-400 text-sm">${Number(t.vol).toLocaleString()}</td>
-                    <td className="px-8 py-6 text-right">
-                       <a href={t.url} target="_blank" className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 px-3 py-2 rounded-lg group hover:bg-orange-500 hover:text-black transition-all">
-                          <span className="text-sm font-black italic">{t.score}</span>
-                          <TrendingUp className="w-4 h-4" />
-                       </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </td>
+                  <td className="px-4 py-5 text-[14px] font-bold text-white">{t.age}</td>
+                  <td className="px-4 py-5 text-[14px] font-bold text-white">{t.mcap}</td>
+                  <td className="px-4 py-5">
+                    <div className="text-[14px] font-bold text-white">{t.vol}</div>
+                    <div className="text-[10px] text-zinc-600 font-bold flex items-center gap-1 tracking-tighter">👥 {t.holders}</div>
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <div className="inline-flex rounded-lg overflow-hidden border border-white/5 shadow-lg">
+                      <span className={`px-3 py-1.5 text-[11px] font-black uppercase tracking-tighter ${t.status === 'Strong' ? 'bg-[#1a2e26] text-[#4ade80]' : 'bg-[#2e2a1a] text-[#facc15]'}`}>
+                        {t.status}
+                      </span>
+                      <span className="bg-[#1a1d1e] px-2 py-1.5 text-[11px] font-black text-white border-l border-white/5">
+                        {t.score}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="p-10 text-center border-t border-white/5">
+            <p className="text-[11px] text-zinc-700 font-bold uppercase tracking-[0.2em]">
+              Many of these will fail. Don't trust – verify. Signal fee applies.
+            </p>
           </div>
-        </div>
-        <div className="mt-6 text-center text-[10px] text-zinc-600 font-black tracking-widest uppercase">
-          Last Global Update: {lastUpdate.toLocaleTimeString()} · Data via DexScreener API
         </div>
       </div>
     </main>
