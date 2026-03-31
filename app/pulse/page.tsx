@@ -1,13 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info, ShieldAlert, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info, ShieldAlert, Zap } from "lucide-react";
 import Link from "next/link";
+import { Connection, VersionedTransaction } from '@solana/web3.js';
 
 export default function TeftPulse() {
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [showOptions, setShowOptions] = useState(false);
+  const [buyingStatus, setBuyingStatus] = useState<string | null>(null);
 
   const fetchSignals = async () => {
     setLoading(true);
@@ -34,8 +36,69 @@ export default function TeftPulse() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const openJupiterSwap = (address: string) => {
-    window.open(`https://jup.ag/swap/SOL-${address}`, '_blank');
+  // 🚀 DIE EXECUTION ENGINE: Jupiter API + Phantom + Helius
+  const executeInstantBuy = async (tokenAddress: string, ticker: string) => {
+    try {
+      setBuyingStatus(ticker);
+      
+      // 1. Phantom Wallet checken und verbinden
+      const provider = (window as any).solana;
+      if (!provider || !provider.isPhantom) {
+        alert("Phantom Wallet nicht gefunden! Bitte installieren.");
+        setBuyingStatus(null);
+        return;
+      }
+      await provider.connect();
+      const pubKey = provider.publicKey.toString();
+
+      // 2. Jupiter Quote API abfragen (Wir kaufen testweise für 0.05 SOL, Slippage 5%)
+      // 50000000 lamports = 0.05 SOL
+      const quoteResponse = await (
+        await fetch(`https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${tokenAddress}&amount=50000000&slippageBps=500`)
+      ).json();
+
+      // 3. Swap Transaktion von Jupiter bauen lassen
+      // HIER kommt später euer referralAccount rein!
+      const swapResponse = await (
+        await fetch('https://quote-api.jup.ag/v6/swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quoteResponse,
+            userPublicKey: pubKey,
+            wrapAndUnwrapSol: true,
+            // feeAccount: "EUER_REFERRAL_ACCOUNT" // Auskommentiert bis er generiert ist
+          })
+        })
+      ).json();
+
+      if (swapResponse.error) {
+        throw new Error(swapResponse.error);
+      }
+
+      // 4. Transaktion vorbereiten und über Phantom signieren lassen
+      const swapTransactionBuf = Buffer.from(swapResponse.swapTransaction, 'base64');
+      const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+      const signedTransaction = await provider.signTransaction(transaction);
+
+      // 5. Über euren HELIUS RPC an die Blockchain senden (Maximaler Speed)
+      const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl, 'confirmed');
+      const rawTransaction = signedTransaction.serialize();
+      
+      const txid = await connection.sendRawTransaction(rawTransaction, {
+        skipPreflight: true,
+        maxRetries: 2
+      });
+
+      alert(`🚀 Swap an Solana gesendet! TX: ${txid}`);
+      
+    } catch (error: any) {
+      console.error("Swap fehlgeschlagen:", error);
+      alert(`Swap abgebrochen: ${error.message}`);
+    } finally {
+      setBuyingStatus(null);
+    }
   };
 
   return (
@@ -83,7 +146,6 @@ export default function TeftPulse() {
              </div>
           </div>
 
-          {/* DAS IST DER BLOCK, DEN ICH VORHIN VERLOREN HATTE! */}
           {showOptions && (
             <div className="p-6 bg-[#1a1d1e] border-b border-white/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -116,7 +178,6 @@ export default function TeftPulse() {
               </div>
             </div>
           )}
-          {/* ENDE DES REPARIERTEN BLOCKS */}
 
           <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[650px]">
@@ -126,7 +187,7 @@ export default function TeftPulse() {
                 <th className="px-4 py-5 font-bold">Age</th>
                 <th className="px-4 py-5 font-bold">MCap</th>
                 <th className="px-4 py-5 font-bold">Volume</th>
-                <th className="px-6 py-5 font-bold text-right">Action</th>
+                <th className="px-6 py-5 font-bold text-right">Instant Buy</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -158,14 +219,19 @@ export default function TeftPulse() {
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <div className="inline-flex rounded-lg overflow-hidden border border-white/5 shadow-lg group-hover:border-orange-500/50 group-hover:shadow-[0_0_15px_rgba(249,115,22,0.2)] transition-all cursor-pointer" onClick={() => openJupiterSwap(t.address)}>
+                    {/* INSTANT BUY BUTTON */}
+                    <button 
+                      onClick={() => executeInstantBuy(t.address, t.ticker)}
+                      disabled={buyingStatus === t.ticker}
+                      className="inline-flex rounded-lg overflow-hidden border border-white/5 shadow-lg hover:border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all cursor-pointer group/btn disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       <span className={`px-3 py-1.5 text-[11px] font-black uppercase tracking-tighter ${t.status === 'Strong' ? 'bg-[#1a2e26] text-[#4ade80]' : 'bg-[#2e2a1a] text-[#facc15]'}`}>
-                        {t.status}
+                        {buyingStatus === t.ticker ? 'Loading...' : t.status}
                       </span>
-                      <span className="bg-[#1a1d1e] px-2 py-1.5 text-[11px] font-black text-white border-l border-white/5 flex items-center gap-1">
-                        {t.score} <ShoppingCart className="w-3 h-3 ml-1 text-orange-500" />
+                      <span className="bg-orange-500 px-3 py-1.5 text-[11px] font-black text-black border-l border-white/5 flex items-center gap-1 group-hover/btn:bg-orange-400 transition-colors">
+                        <Zap className="w-3 h-3" /> BUY
                       </span>
-                    </div>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -175,7 +241,7 @@ export default function TeftPulse() {
 
           <div className="p-8 text-center border-t border-white/5 bg-[#121415]">
             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">
-              Many of these will fail. Don't trust – verify.
+              Many of these will fail. Don't trust – verify. High-speed execution powered by Jupiter API.
             </p>
           </div>
         </div>
