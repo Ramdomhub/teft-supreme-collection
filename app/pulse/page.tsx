@@ -10,6 +10,7 @@ export default function TeftPulse() {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [showOptions, setShowOptions] = useState(false);
   const [buyingStatus, setBuyingStatus] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const fetchSignals = async () => {
     setLoading(true);
@@ -26,6 +27,7 @@ export default function TeftPulse() {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchSignals();
     const interval = setInterval(fetchSignals, 15000);
     return () => clearInterval(interval);
@@ -36,12 +38,10 @@ export default function TeftPulse() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  // 🚀 DIE EXECUTION ENGINE: Jupiter API + Phantom + Helius
   const executeInstantBuy = async (tokenAddress: string, ticker: string) => {
     try {
       setBuyingStatus(ticker);
       
-      // 1. Phantom Wallet checken und verbinden
       const provider = (window as any).solana;
       if (!provider || !provider.isPhantom) {
         alert("Phantom Wallet nicht gefunden! Bitte installieren.");
@@ -51,46 +51,36 @@ export default function TeftPulse() {
       await provider.connect();
       const pubKey = provider.publicKey.toString();
 
-      // 2. Jupiter Quote API abfragen (Wir kaufen testweise für 0.05 SOL, Slippage 5%)
-      // 50000000 lamports = 0.05 SOL
+      // UPDATE AUF DIE NEUE JUPITER 2026 API (lite-api.jup.ag/swap/v1)
       const quoteResponse = await (
-        await fetch(`https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${tokenAddress}&amount=50000000&slippageBps=500`)
+        await fetch(`https://lite-api.jup.ag/swap/v1/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${tokenAddress}&amount=50000000&slippageBps=500`)
       ).json();
 
-      // 3. Swap Transaktion von Jupiter bauen lassen
-      // HIER kommt später euer referralAccount rein!
+      if (quoteResponse.error) throw new Error(quoteResponse.error);
+
       const swapResponse = await (
-        await fetch('https://quote-api.jup.ag/v6/swap', {
+        await fetch('https://lite-api.jup.ag/swap/v1/swap', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             quoteResponse,
             userPublicKey: pubKey,
             wrapAndUnwrapSol: true,
-            // feeAccount: "EUER_REFERRAL_ACCOUNT" // Auskommentiert bis er generiert ist
           })
         })
       ).json();
 
-      if (swapResponse.error) {
-        throw new Error(swapResponse.error);
-      }
+      if (swapResponse.error) throw new Error(swapResponse.error);
 
-      // 4. Transaktion vorbereiten und über Phantom signieren lassen
       const swapTransactionBuf = Buffer.from(swapResponse.swapTransaction, 'base64');
       const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
       const signedTransaction = await provider.signTransaction(transaction);
 
-      // 5. Über euren HELIUS RPC an die Blockchain senden (Maximaler Speed)
       const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || "https://api.mainnet-beta.solana.com";
       const connection = new Connection(rpcUrl, 'confirmed');
       const rawTransaction = signedTransaction.serialize();
       
-      const txid = await connection.sendRawTransaction(rawTransaction, {
-        skipPreflight: true,
-        maxRetries: 2
-      });
-
+      const txid = await connection.sendRawTransaction(rawTransaction, { skipPreflight: true, maxRetries: 2 });
       alert(`🚀 Swap an Solana gesendet! TX: ${txid}`);
       
     } catch (error: any) {
@@ -142,7 +132,7 @@ export default function TeftPulse() {
                 </button>
              </div>
              <div className="text-[11px] text-zinc-600 font-bold uppercase tracking-widest">
-                Updated {lastUpdate.toLocaleTimeString()}
+                Updated {mounted ? lastUpdate.toLocaleTimeString() : '...'}
              </div>
           </div>
 
@@ -219,7 +209,6 @@ export default function TeftPulse() {
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    {/* INSTANT BUY BUTTON */}
                     <button 
                       onClick={() => executeInstantBuy(t.address, t.ticker)}
                       disabled={buyingStatus === t.ticker}
