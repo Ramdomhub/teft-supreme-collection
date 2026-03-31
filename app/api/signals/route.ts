@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { Connection, PublicKey } from '@solana/web3.js';
 
+// VERCEL CACHE KILLER: Zwingt die API, bei jedem Klick 100% Live-Daten zu holen!
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
-    // 1. DISCOVERY: Wir suchen nach "pump" Tokens
-    const response = await fetch('https://api.dexscreener.com/latest/dex/search?q=pump', {
+    // DISCOVERY: Wir suchen nach "sol" (liefert die aktivsten Solana-Paare)
+    const response = await fetch('https://api.dexscreener.com/latest/dex/search?q=sol', {
       cache: 'no-store' 
     });
     const data = await response.json();
@@ -13,19 +17,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Keine Daten gefunden' }, { status: 500 });
     }
 
-    // 2. VORFILTERUNG (Etwas weiter geöffnet)
+    // VORFILTERUNG: Wir lassen jetzt fast ALLES durch, damit wir echte Token sehen!
     let candidates = data.pairs.filter((p: any) => {
       if (p.chainId !== 'solana') return false;
       if (p.baseToken.symbol === "SOL" || p.baseToken.symbol === "USDC") return false;
-      const mcap = p.fdv || 0;
-      const vol24h = p.volume?.h24 || 0;
-      if (mcap < 1000 || mcap > 10000000) return false; 
-      if (vol24h < 500) return false; // Leicht verringert für mehr Ergebnisse
+      // MCap und Volumen Filter sind DEAKTIVIERT für den Daten-Test!
       return true;
     }).slice(0, 15);
 
-    // --- BUGFIX: ECHTE HELIUS ON-CHAIN VERIFICATION (v2.1) ---
-    // Wir holen die Accounts, aber wir FILTERN SIE NICHT MEHR RAUS.
+    // ECHTE HELIUS ON-CHAIN VERIFICATION
     let accountsInfo = [];
     const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL;
     
@@ -39,7 +39,7 @@ export async function GET() {
       }
     }
 
-    // --- FINALES SCORING UND VERIFIZIERUNG ---
+    // SCORING UND VERIFIZIERUNG
     let processedSignals = candidates.map((p: any, index: number) => {
       const mcap = p.fdv || 0;
       const vol24h = p.volume?.h24 || 0;
@@ -47,25 +47,22 @@ export async function GET() {
       const ageMinutes = Math.floor(Math.random() * 59) + 1; 
       const holdersCount = Math.floor(Math.random() * 900) + 50;
 
-      // Check ob Helius den Token On-Chain verifizieren konnte
       const isHeliusVerified = accountsInfo && accountsInfo[index] !== null;
 
       let score = 50;
-      if (vol24h > mcap * 0.2) score += 20; // Velocity
-      
-      // Bonus für On-Chain Verifizierung
+      if (vol24h > mcap * 0.2) score += 20; 
       if (isHeliusVerified) score += 20; 
-      else score -= 10; // Abzug für unverified
+      else score -= 10; 
 
       score = Math.max(1, Math.min(99, score));
 
-      // Strong nur noch für Helius-verifizierte Tokens
       let status = "Watch";
       if (score >= 80 && isHeliusVerified) status = "Strong";
-      if (score >= 90 && !isHeliusVerified) score = 89; // Drosseln unverified Tokens
+      if (score >= 90 && !isHeliusVerified) score = 89; 
 
       return {
-        name: p.baseToken.name + (isHeliusVerified ? " ✓" : ""), // Visuelles Checkmark
+        // Wenn Helius den Contract verifiziert, gibt's ein fettes Häkchen
+        name: p.baseToken.name + (isHeliusVerified ? " ✓" : ""), 
         ticker: p.baseToken.symbol,
         age: `${ageMinutes} min`,
         mcap: `$${mcap.toLocaleString()}`,
@@ -78,8 +75,7 @@ export async function GET() {
       };
     }).sort((a: any, b: any) => b.score - a.score);
 
-    // FAIL-SAFE (Greift jetzt nur noch, wenn DexScreener komplett offline ist)
-    // Wir ändern das Dummy-Fallback auf nur einen Token, damit wir sehen, welcher Code läuft!
+    // FAIL-SAFE
     if (processedSignals.length === 0) {
       processedSignals = [
         { name: "NeonApe (Fallback)", ticker: "NAPE", age: "1 min", mcap: "$14,200", vol: "$8,150", holders: 142, score: 99, status: "Strong", dexUrl: "https://dexscreener.com", address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" }
