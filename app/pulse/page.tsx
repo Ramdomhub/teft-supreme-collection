@@ -1,8 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info, ShieldAlert, Zap } from "lucide-react";
+import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info, ShieldAlert, Zap, Wallet } from "lucide-react";
 import Link from "next/link";
 import { Connection, VersionedTransaction } from '@solana/web3.js';
+
+// HIER KOMMT SPÄTER DEINE FEE-ADRESSE VON REFERRAL.JUP.AG REIN
+const JUPITER_FEE_ACCOUNT = ""; 
 
 export default function TeftPulse() {
   const [tokens, setTokens] = useState([]);
@@ -11,6 +14,9 @@ export default function TeftPulse() {
   const [showOptions, setShowOptions] = useState(false);
   const [buyingStatus, setBuyingStatus] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  
+  // NEU: Trade Size State (Standard: 0.1 SOL)
+  const [tradeSize, setTradeSize] = useState<string>("0.1");
 
   const fetchSignals = async () => {
     setLoading(true);
@@ -51,22 +57,34 @@ export default function TeftPulse() {
       await provider.connect();
       const pubKey = provider.publicKey.toString();
 
-      // UPDATE AUF DIE NEUE JUPITER 2026 API (lite-api.jup.ag/swap/v1)
-      const quoteResponse = await (
-        await fetch(`https://lite-api.jup.ag/swap/v1/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${tokenAddress}&amount=50000000&slippageBps=500`)
-      ).json();
+      // Umrechnung von SOL in Lamports (1 SOL = 1.000.000.000 Lamports)
+      const lamports = Math.floor(parseFloat(tradeSize) * 10 ** 9);
+      if (isNaN(lamports) || lamports <= 0) throw new Error("Ungültige Trade-Größe");
 
+      // NEU: Plattform-Fee von 50 BPS (0.5%) im Quote anfordern
+      let quoteUrl = `https://lite-api.jup.ag/swap/v1/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${tokenAddress}&amount=${lamports}&slippageBps=500`;
+      if (JUPITER_FEE_ACCOUNT) {
+        quoteUrl += `&platformFeeBps=50`; 
+      }
+
+      const quoteResponse = await (await fetch(quoteUrl)).json();
       if (quoteResponse.error) throw new Error(quoteResponse.error);
+
+      // NEU: Swap-Body mit optionaler Fee-Account-Übergabe
+      const swapBody: any = {
+        quoteResponse,
+        userPublicKey: pubKey,
+        wrapAndUnwrapSol: true,
+      };
+      if (JUPITER_FEE_ACCOUNT) {
+        swapBody.feeAccount = JUPITER_FEE_ACCOUNT;
+      }
 
       const swapResponse = await (
         await fetch('https://lite-api.jup.ag/swap/v1/swap', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            quoteResponse,
-            userPublicKey: pubKey,
-            wrapAndUnwrapSol: true,
-          })
+          body: JSON.stringify(swapBody)
         })
       ).json();
 
@@ -110,6 +128,23 @@ export default function TeftPulse() {
             <p className="text-zinc-500 text-lg mt-1 font-medium">See what others don't. <span className="text-[10px] bg-orange-500/20 text-orange-500 border border-orange-500/30 px-2 py-0.5 rounded tracking-widest uppercase ml-2">Beta</span></p>
           </div>
           <div className="flex items-center gap-3">
+            {/* NEU: Input für die Solana Trade Size */}
+            <div className="flex items-center bg-[#1a1d1e] rounded-xl border border-white/5 overflow-hidden h-[42px]">
+               <div className="pl-3 pr-2 flex items-center text-zinc-500">
+                  <Wallet className="w-4 h-4" />
+               </div>
+               <input 
+                  type="number" 
+                  step="0.01" 
+                  min="0.01"
+                  value={tradeSize}
+                  onChange={(e) => setTradeSize(e.target.value)}
+                  className="bg-transparent text-white w-16 text-sm font-bold outline-none placeholder:text-zinc-700"
+                  placeholder="0.1"
+               />
+               <div className="pr-4 text-xs font-bold text-zinc-600 uppercase tracking-widest">SOL</div>
+            </div>
+            
             <a href="mailto:support@teftlegion.io" className="p-3 bg-[#1a1d1e] rounded-xl border border-white/5 hover:bg-white/5 transition-all group" title="Feedback">
                 <Mail className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
             </a>
@@ -149,7 +184,7 @@ export default function TeftPulse() {
                     <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Age:</span> Max 10 min alt</li>
                     <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">MCap:</span> Hard filter $7k - $20k</li>
                     <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Volume:</span> Action over $5k required</li>
-                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Security:</span> Mint Authority must be revoked</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Security:</span> <span className="text-orange-400">Helius On-Chain Verification</span></li>
                   </ul>
                 </div>
                 <div>
