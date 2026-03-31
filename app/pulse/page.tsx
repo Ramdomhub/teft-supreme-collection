@@ -1,17 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail } from "lucide-react";
+import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info } from "lucide-react";
 import Link from "next/link";
 
 export default function TeftPulse() {
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [showOptions, setShowOptions] = useState(false); // NEU: State für das Options-Menü
 
   const fetchSignals = async () => {
     setLoading(true);
     try {
-      // Wir holen die Daten jetzt von eurer EIGENEN Engine
       const response = await fetch('/api/signals');
       const data = await response.json();
       if (data.signals) setTokens(data.signals);
@@ -25,11 +25,10 @@ export default function TeftPulse() {
 
   useEffect(() => {
     fetchSignals();
-    const interval = setInterval(fetchSignals, 15000); // 15 Sek Refresh
+    const interval = setInterval(fetchSignals, 15000);
     return () => clearInterval(interval);
   }, []);
 
-  // Viral Loop: Twitter Share Funktion
   const shareToX = (token: any) => {
     const text = `🚨 TEFT Pulse Alert 🚨\n\n🟢 $${token.ticker} triggered a ${token.status.toUpperCase()} (${token.score}) Score!\n⏱ Age: ${token.age} | 💰 MCap: ${token.mcap} | 🌊 Vol: ${token.vol}\n\nFound by @TEFTlegion Pulse ⚡️\n${token.dexUrl}`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
@@ -64,15 +63,41 @@ export default function TeftPulse() {
         </div>
 
         <div className="bg-[#161819] rounded-2xl border border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden">
+          
+          {/* TAB BAR */}
           <div className="flex justify-between items-center px-6 py-4 border-b border-white/5">
-             <div className="flex gap-8 text-[13px] font-bold uppercase tracking-wider">
-                <span className="text-white border-b border-orange-500 pb-4 -mb-4">Feed</span>
-                <span className="text-zinc-600">Options</span>
+             <div className="flex gap-4 text-[13px] font-bold uppercase tracking-wider items-center">
+                <span className="text-white border-b border-orange-500 pb-4 -mb-4 px-2">Feed</span>
+                {/* OPTIONS BUTTON (Toggelt die Erklärung) */}
+                <button 
+                  onClick={() => setShowOptions(!showOptions)} 
+                  className={`px-4 py-1.5 transition-all flex items-center gap-2 ${showOptions ? 'bg-[#2a2d2e] text-white rounded-lg' : 'text-zinc-500 hover:text-white'}`}
+                >
+                  Options <ChevronDown className={`w-3 h-3 transition-transform ${showOptions ? 'rotate-180' : ''}`} />
+                </button>
              </div>
              <div className="text-[11px] text-zinc-600 font-bold uppercase tracking-widest">
                 Updated {lastUpdate.toLocaleTimeString()}
              </div>
           </div>
+
+          {/* OPTIONS PANEL (Erklärung der Pulse Logik) */}
+          {showOptions && (
+            <div className="p-6 bg-[#1a1d1e] border-b border-white/5">
+              <div className="flex items-center gap-2 mb-4">
+                <Info className="w-4 h-4 text-orange-500" />
+                <h3 className="text-white font-bold text-sm tracking-widest uppercase">Pulse Logic Parameters [Validated]</h3>
+              </div>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-zinc-400">
+                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Network:</span> Strictly Solana Native</li>
+                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Age:</span> Max 10 min alt</li>
+                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">MCap:</span> Hard filter $7k - $20k</li>
+                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Volume:</span> Action over $5k required</li>
+                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Holders:</span> Tracked automatically (👥)</li>
+                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Security:</span> Mint Authority must be revoked</li>
+              </ul>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[650px]">
@@ -87,7 +112,7 @@ export default function TeftPulse() {
             </thead>
             <tbody className="divide-y divide-white/5">
               {tokens.length === 0 && !loading && (
-                 <tr><td colSpan={5} className="text-center py-10 text-zinc-600">Keine Signale gefunden, die den TEFT-Filter bestehen.</td></tr>
+                 <tr><td colSpan={5} className="text-center py-10 text-zinc-600">No signals found matching the TEFT-Filter right now.</td></tr>
               )}
               {tokens.map((t: any, i) => (
                 <tr key={i} className="hover:bg-white/[0.02] transition-all group">
@@ -129,9 +154,10 @@ export default function TeftPulse() {
           </table>
           </div>
 
+          {/* FOOTER - "Protected by" entfernt */}
           <div className="p-8 text-center border-t border-white/5 bg-[#121415]">
             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">
-              Many of these will fail. Don't trust – verify. <br className="md:hidden" /><span className="text-zinc-700">Protected by TEFT Degen Engine</span>
+              Many of these will fail. Don't trust – verify.
             </p>
           </div>
         </div>
