@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info } from "lucide-react";
+import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 
 export default function TeftPulse() {
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [showOptions, setShowOptions] = useState(false); // NEU: State für das Options-Menü
+  const [showOptions, setShowOptions] = useState(false);
 
   const fetchSignals = async () => {
     setLoading(true);
@@ -68,7 +68,6 @@ export default function TeftPulse() {
           <div className="flex justify-between items-center px-6 py-4 border-b border-white/5">
              <div className="flex gap-4 text-[13px] font-bold uppercase tracking-wider items-center">
                 <span className="text-white border-b border-orange-500 pb-4 -mb-4 px-2">Feed</span>
-                {/* OPTIONS BUTTON (Toggelt die Erklärung) */}
                 <button 
                   onClick={() => setShowOptions(!showOptions)} 
                   className={`px-4 py-1.5 transition-all flex items-center gap-2 ${showOptions ? 'bg-[#2a2d2e] text-white rounded-lg' : 'text-zinc-500 hover:text-white'}`}
@@ -81,21 +80,40 @@ export default function TeftPulse() {
              </div>
           </div>
 
-          {/* OPTIONS PANEL (Erklärung der Pulse Logik) */}
+          {/* ERWEITERTES OPTIONS PANEL */}
           {showOptions && (
             <div className="p-6 bg-[#1a1d1e] border-b border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <Info className="w-4 h-4 text-orange-500" />
-                <h3 className="text-white font-bold text-sm tracking-widest uppercase">Pulse Logic Parameters [Validated]</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Hard Filters */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <ShieldAlert className="w-4 h-4 text-zinc-400" />
+                    <h3 className="text-white font-bold text-sm tracking-widest uppercase">Hard Filters (The Gate)</h3>
+                  </div>
+                  <ul className="space-y-2 text-sm text-zinc-400">
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Network:</span> Strictly Solana Native</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Age:</span> Max 10 min alt</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">MCap:</span> Hard filter $7k - $20k</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Volume:</span> Action over $5k required</li>
+                    <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Security:</span> Mint Authority must be revoked</li>
+                  </ul>
+                </div>
+                
+                {/* Engine Scoring */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Info className="w-4 h-4 text-orange-500" />
+                    <h3 className="text-white font-bold text-sm tracking-widest uppercase">Pulse Engine Scoring</h3>
+                  </div>
+                  <ul className="space-y-2 text-sm text-zinc-400">
+                    <li className="flex items-center gap-2"><span className="text-orange-500 font-black">+</span> <span className="text-zinc-200 font-medium">LP Burn:</span> Burned liquidity boosts score</li>
+                    <li className="flex items-center gap-2"><span className="text-orange-500 font-black">+</span> <span className="text-zinc-200 font-medium">Whale Check:</span> Top 10 holders under 30%</li>
+                    <li className="flex items-center gap-2"><span className="text-red-500 font-black">-</span> <span className="text-zinc-200 font-medium">Dump Risk:</span> Top 10 holders over 50%</li>
+                    <li className="flex items-center gap-2"><span className="text-orange-500 font-black">+</span> <span className="text-zinc-200 font-medium">Velocity:</span> High Volume to MCap ratio</li>
+                    <li className="flex items-center gap-2">👥 <span className="text-zinc-200 font-medium">Holders:</span> Tracked automatically</li>
+                  </ul>
+                </div>
               </div>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-zinc-400">
-                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Network:</span> Strictly Solana Native</li>
-                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Age:</span> Max 10 min alt</li>
-                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">MCap:</span> Hard filter $7k - $20k</li>
-                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Volume:</span> Action over $5k required</li>
-                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Holders:</span> Tracked automatically (👥)</li>
-                <li className="flex items-center gap-2">✓ <span className="text-zinc-200 font-medium">Security:</span> Mint Authority must be revoked</li>
-              </ul>
             </div>
           )}
 
@@ -154,7 +172,6 @@ export default function TeftPulse() {
           </table>
           </div>
 
-          {/* FOOTER - "Protected by" entfernt */}
           <div className="p-8 text-center border-t border-white/5 bg-[#121415]">
             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">
               Many of these will fail. Don't trust – verify.
