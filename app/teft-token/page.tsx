@@ -9,8 +9,9 @@ export default function Market() {
 
   return (
     <main className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-6 antialiased font-sans">
-      <div className="w-[460px] bg-[#0f0f0f] rounded-[28px] p-[14px] shadow-[0_20px_50px_rgba(0,0,0,0.25)] flex flex-col text-white">
-        <div className="px-6 pb-6 pt-6 flex flex-col">
+      {/* Exakt die gleiche Breite und das gleiche Padding wie die weiße Card */}
+      <div className="w-[460px] min-h-[600px] bg-[#0f0f0f] rounded-[28px] p-[14px] shadow-[0_20px_50px_rgba(0,0,0,0.25)] flex flex-col text-white overflow-hidden">
+        <div className="px-6 pb-8 pt-6 flex flex-col flex-grow">
           <div className="flex justify-between items-center h-[24px] mb-8">
             <Link href="/" className="flex items-center text-zinc-500 text-sm font-bold hover:text-white transition-all">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
@@ -35,7 +36,7 @@ export default function Market() {
             ))}
           </div>
 
-          <a href="https://magiceden.io/marketplace/teft_supreme" target="_blank" className="w-full bg-white text-black rounded-[16px] py-4 font-black flex items-center justify-center gap-2 mt-4 hover:bg-zinc-200 transition-all text-[14px] shadow-xl">
+          <a href="https://magiceden.io/marketplace/teft_supreme" target="_blank" className="w-full bg-white text-black rounded-[16px] py-4 font-black flex items-center justify-center gap-2 mt-auto hover:bg-zinc-200 transition-all text-[14px] shadow-xl">
             BUY ON MAGIC EDEN <ExternalLink className="w-4 h-4" />
           </a>
         </div>
