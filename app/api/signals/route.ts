@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // GEHEIMWAFFE: Wir suchen jetzt nach frischen 'pump' Token (Pump.fun Launches auf Solana)
-    const response = await fetch('https://api.dexscreener.com/latest/dex/search?q=pump', {
-      next: { revalidate: 15 }
+    // 1. CACHE KILLER: 'no-store' zwingt Vercel, jedes Mal live bei DexScreener anzufragen!
+    const response = await fetch('https://api.dexscreener.com/latest/dex/search?q=sol', {
+      cache: 'no-store' 
     });
     const data = await response.json();
 
@@ -14,35 +14,32 @@ export async function GET() {
 
     const processedSignals = data.pairs
       .map((p: any) => {
-        // 1. ABSOLUTER SCHUTZ: Nur native Solana Token!
         if (p.chainId !== 'solana') return null;
+        if (p.baseToken.symbol === "SOL") return null;
 
         const mcap = p.fdv || 0;
         const vol24h = p.volume?.h24 || 0;
         
-        // 2. DER TÜRSTEHER (Minimal angepasst für echte Ergebnisse)
-        // Wir fischen im 5k bis 50k Becken (Echte Degen-Size)
-        if (mcap < 5000 || mcap > 50000) return null; 
-        if (vol24h < 1000) return null; // Tote Coins fliegen raus
+        // --- BETA TEST NETZ (Weit genug, um die DexScreener 30-Limitierung zu umgehen) ---
+        // Wenn du Helius hast, stellen wir das wieder auf 7000 - 20000!
+        if (mcap < 5000 || mcap > 5000000) return null; 
+        if (vol24h < 1000) return null; 
 
-        // 3. ON-CHAIN SIMULATION (Für späteres Helius-Backend)
-        const ageMinutes = Math.floor(Math.random() * 10) + 1; // Max 10 Min alt
-        const isMintRevoked = Math.random() > 0.1; // 90% Wahrscheinlichkeit auf Safe
+        // Simulation der tiefen On-Chain-Metriken
+        const ageMinutes = Math.floor(Math.random() * 59) + 1; // Bis zu 1 Stunde alt für den Test
+        const isMintRevoked = Math.random() > 0.1; 
         const top10HoldPct = Math.floor(Math.random() * 60) + 10;
         const isLpBurned = Math.random() > 0.4;
-        const holdersCount = Math.floor(Math.random() * 400) + 50;
+        const holdersCount = Math.floor(Math.random() * 900) + 50;
 
-        // Harter Alters- und Sicherheits-Check
-        if (ageMinutes > 10) return null;
+        // Security Check bleibt hart!
         if (!isMintRevoked) return null;
 
-        // 4. ENGINE SCORING (0-99)
+        // --- SCORING ENGINE ---
         let score = 50;
-        
-        // Volumen/MCap Ratio (Extrem wichtig für Micro-Caps)
-        if (vol24h > mcap * 0.5) score += 20; 
-        if (isLpBurned) score += 15;
-        if (top10HoldPct < 30) score += 15;
+        if (vol24h > mcap * 0.2) score += 20; // Velocity
+        if (isLpBurned) score += 15; // LP Burn
+        if (top10HoldPct < 30) score += 15; // Whale Defense
         else if (top10HoldPct > 50) score -= 20;
 
         score = Math.max(1, Math.min(99, score));
@@ -59,7 +56,7 @@ export async function GET() {
           dexUrl: p.url
         };
       })
-      .filter(Boolean) // Schmeißt alle geblockten Token endgültig weg
+      .filter(Boolean)
       .sort((a: any, b: any) => b.score - a.score)
       .slice(0, 15);
 
