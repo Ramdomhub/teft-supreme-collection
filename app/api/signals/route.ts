@@ -5,45 +5,6 @@ export const revalidate = 0;
 
 const HELIUS_URL = process.env.NEXT_PUBLIC_HELIUS_RPC_URL;
 
-async function checkSecurity(mint: string) {
-  try {
-    const res = await fetch(HELIUS_URL!, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 'teft', method: 'getAsset', params: { id: mint }
-      })
-    });
-    const { result } = await res.json();
-    
-    const isFreezeRevoked = result.authorities?.every((a: any) => a.scopes?.includes('owner')) || result.authorities?.length === 0;
-    const hasSocials = !!(result.content?.metadata?.extensions?.twitter || result.content?.metadata?.extensions?.telegram || result.content?.links?.external_url);
-
-    const holderRes = await fetch(HELIUS_URL!, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 'whale', method: 'getTokenLargestAccounts', params: [mint]
-      })
-    });
-    const holderData = await holderRes.json();
-    const topAccounts = holderData.result?.value || [];
-    const totalSupply = result.token_info?.supply || 1;
-    const top10Amount = topAccounts.slice(0, 10).reduce((acc: number, curr: any) => acc + parseInt(curr.amount), 0);
-    const top10Percent = (top10Amount / totalSupply) * 100;
-
-    return {
-      isFreezeSafe: isFreezeRevoked,
-      isWhaleSafe: top10Percent < 35,
-      hasSocials: hasSocials,
-      top10: top10Percent.toFixed(1),
-      image: result.content?.links?.image || result.content?.metadata?.image || ""
-    };
-  } catch (e) {
-    return { isFreezeSafe: false, isWhaleSafe: false, hasSocials: false, top10: "??", image: "" };
-  }
-}
-
 export async function GET() {
   if (!HELIUS_URL) return NextResponse.json({ error: "HELIUS_KEY_MISSING" }, { status: 500 });
 
@@ -53,31 +14,46 @@ export async function GET() {
     if (!data.pairs) return NextResponse.json({ signals: [] });
 
     const now = Date.now();
-    // Wir nehmen die 15 neuesten Paare, egal wie alt (bis 60 Min)
-    const rawSignals = data.pairs
-      .filter((p: any) => p.chainId === 'solana')
-      .slice(0, 15);
 
+    // 1. STRIKTER FILTER: Nur Solana, < 15 Min, < $100k MCap
+    const rawSignals = data.pairs.filter((p: any) => {
+      const ageMin = (now - p.pairCreatedAt) / 60000;
+      const mcap = p.fdv || p.marketCap || 0;
+      return p.chainId === 'solana' && ageMin > 0 && ageMin <= 15 && mcap <= 100000;
+    }).slice(0, 10);
+
+    // 2. HELIUS ENRICHMENT
     const signals = await Promise.all(rawSignals.map(async (p: any) => {
-      const sec = await checkSecurity(p.baseToken.address);
-      
-      return {
-        name: p.baseToken.name,
-        ticker: p.baseToken.symbol,
-        address: p.baseToken.address,
-        age: `${Math.floor((now - p.pairCreatedAt) / 60000)}m`,
-        mcap: `$${Math.floor(p.fdv || 0).toLocaleString()}`,
-        vol: `$${Math.floor(p.volume?.h24 || 0).toLocaleString()}`,
-        liq: `$${Math.floor(p.liquidity?.usd || 0).toLocaleString()}`,
-        score: sec.isFreezeSafe && sec.hasSocials ? 95 : 65,
-        dexUrl: p.url,
-        holders: `Top 10: ${sec.top10}%`,
-        image: sec.image,
-        isSafe: sec.isFreezeSafe && sec.hasSocials
-      };
+      try {
+        const res = await fetch(HELIUS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0', id: 'teft', method: 'getAsset', params: { id: p.baseToken.address }
+          })
+        });
+        const asset = await res.json();
+        const result = asset.result;
+
+        const isSafe = result?.authorities?.length === 0 || result?.authorities?.every((a: any) => a.scopes?.includes('owner'));
+        
+        return {
+          name: result?.content?.metadata?.name || p.baseToken.name,
+          ticker: result?.content?.metadata?.symbol || p.baseToken.symbol,
+          address: p.baseToken.address,
+          age: `${Math.floor((now - p.pairCreatedAt) / 60000)}m`,
+          mcap: `$${Math.floor(p.fdv || p.marketCap).toLocaleString()}`,
+          vol: `$${Math.floor(p.volume.h24).toLocaleString()}`,
+          liq: `$${Math.floor(p.liquidity.usd).toLocaleString()}`,
+          score: isSafe ? 98 : 65,
+          dexUrl: p.url,
+          image: result?.content?.links?.image || "",
+          isSafe: isSafe
+        };
+      } catch (e) { return null; }
     }));
 
-    return NextResponse.json({ signals });
+    return NextResponse.json({ signals: signals.filter(Boolean) });
   } catch (e) {
     return NextResponse.json({ error: "Fetch Error" }, { status: 500 });
   }
