@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Zap, Wallet, Droplets, Copy, Check } from "lucide-react";
+import { ArrowLeft, Share2, ChevronDown, RefreshCw, ExternalLink, Users, Mail, Info, ShieldAlert, Zap, Wallet, Droplets, Copy, Check } from "lucide-react";
 import Link from "next/link";
 import { Connection, VersionedTransaction } from '@solana/web3.js';
 
 const JUPITER_FEE_ACCOUNT = ""; 
 
-// KOMPONENTE FÜR NAME, BILD UND SOCIALS (ENRICHMENT)
+// KOMPONENTE FÜR NAME, BILD UND SOCIALS
 function TokenAlphaCell({ mint, ticker, dexUrl }: { mint: string, ticker: string, dexUrl: string }) {
   const [meta, setMeta] = useState<{name: string, image: string} | null>(null);
   const [copied, setCopied] = useState(false);
@@ -64,26 +64,21 @@ export default function TeftPulse() {
     try {
       const response = await fetch('/api/signals', { cache: 'no-store' });
       const data = await response.json();
-      if (data.signals) {
-        setTokens(data.signals);
-      }
+      if (data.signals) setTokens(data.signals);
       setLastUpdate(new Date());
-    } catch (e) {
-      console.error("Pulse Fetch Error:", e);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    setLoading(false);
   };
 
   useEffect(() => {
     setMounted(true);
     fetchSignals();
-    const interval = setInterval(fetchSignals, 15000); // 15s Auto-Refresh
+    const interval = setInterval(fetchSignals, 15000);
     return () => clearInterval(interval);
   }, []);
 
   const shareToX = (token: any) => {
-    const text = `🚨 TEFT Pulse Alert 🚨\n\n🟢 $${token.ticker} triggered a ${token.score} Score!\n⏱ Age: ${token.age} | 💰 MCap: ${token.mcap}\n\nFound by @TEFTlegion Pulse ⚡️\n${token.dexUrl}`;
+    const text = `🚨 TEFT Pulse Alert 🚨\n\n🟢 $${token.ticker} triggered a Score ${token.score}!\n⏱ Age: ${token.age} | 💰 MCap: ${token.mcap}\n\nFound by @TEFTlegion Pulse ⚡️\n${token.dexUrl}`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -110,7 +105,6 @@ export default function TeftPulse() {
 
   return (
     <main className="min-h-screen bg-[#0f1112] text-[#9ca3af] font-sans antialiased">
-      {/* BACKGROUND */}
       <div className="relative w-full h-[250px] md:h-[350px] overflow-hidden">
         <img src="/teft.png" className="w-full h-full object-cover opacity-25 grayscale contrast-125" alt="TEFT" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0f1112] via-[#0f1112]/40 to-transparent" />
@@ -122,7 +116,6 @@ export default function TeftPulse() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-10 pb-20">
-        {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
           <div>
             <h1 className="text-5xl font-black text-white tracking-tighter italic uppercase">TEFT Pulse</h1>
@@ -146,22 +139,37 @@ export default function TeftPulse() {
           </div>
         </div>
 
-        {/* TERMINAL TABLE */}
         <div className="bg-[#161819] rounded-[2rem] border border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden">
           <div className="flex justify-between items-center px-8 py-6 border-b border-white/5 bg-black/20">
              <div className="flex gap-8">
                 <button className="text-white text-[11px] font-black uppercase border-b-2 border-orange-500 pb-6 -mb-6 tracking-widest">Pulse Feed</button>
+                {/* WIEDER "OPTIONS" STATT "CONFIG" */}
                 <button onClick={() => setShowOptions(!showOptions)} className="text-zinc-600 text-[11px] font-black uppercase flex items-center gap-2 hover:text-white transition-colors tracking-widest">
-                   Config <ChevronDown className={`w-3 h-3 ${showOptions ? 'rotate-180' : ''}`} />
+                   Options <ChevronDown className={`w-3 h-3 ${showOptions ? 'rotate-180' : ''}`} />
                 </button>
              </div>
              <div className="text-[10px] text-zinc-700 font-bold uppercase tracking-[0.2em]">Sync: {mounted ? lastUpdate.toLocaleTimeString() : '...'}</div>
           </div>
 
+          {/* DAS PREMIUM ZWEI-SPALTEN LAYOUT IST ZURÜCK */}
           {showOptions && (
-            <div className="p-6 bg-[#1a1d1e] border-b border-white/5 grid grid-cols-2 gap-8">
-              <div className="text-xs text-zinc-500 italic uppercase font-bold tracking-widest">Filter: Strictly {'<'} 10 Min Age</div>
-              <div className="text-xs text-zinc-500 italic uppercase font-bold tracking-widest">Target: Pump.fun launches only</div>
+            <div className="p-8 bg-[#1a1d1e] border-b border-white/5 grid grid-cols-1 md:grid-cols-2 gap-10 animate-in fade-in slide-in-from-top-2">
+              <div>
+                <h3 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2"><ShieldAlert className="w-3 h-3 text-orange-500" /> Hard Filters (The Gate)</h3>
+                <ul className="space-y-2 text-[11px] text-zinc-500 font-bold uppercase tracking-tighter">
+                   <li className="flex items-center gap-2">✓ Strictly Solana Native</li>
+                   <li className="flex items-center gap-2">✓ Max 10 Min Age Filter</li>
+                   <li className="flex items-center gap-2">✓ Pump.fun Launches Only</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2"><Info className="w-3 h-3 text-blue-500" /> Pulse Engine Scoring</h3>
+                <ul className="space-y-2 text-[11px] text-zinc-500 font-bold uppercase tracking-tighter">
+                   <li className="flex items-center gap-2">+ Velocity: Volume/MCap Ratio</li>
+                   <li className="flex items-center gap-2">+ Liquidity Depth Check</li>
+                   <li className="flex items-center gap-2">+ Helius DAS Verification</li>
+                </ul>
+              </div>
             </div>
           )}
 
@@ -178,13 +186,12 @@ export default function TeftPulse() {
             </thead>
             <tbody className="divide-y divide-white/5">
               {tokens.length === 0 && !loading && (
-                 <tr><td colSpan={5} className="py-20 text-center text-xs font-bold text-zinc-700 uppercase tracking-[0.3em] italic">No tokens found under 10m age. Scanning...</td></tr>
+                 <tr><td colSpan={5} className="py-20 text-center text-xs font-bold text-zinc-700 uppercase tracking-[0.3em] italic">No tokens found under 10m age. Scanning the Matrix...</td></tr>
               )}
               {tokens.map((t: any, i) => (
                 <tr key={i} className="hover:bg-white/[0.03] transition-colors group border-l-2 border-transparent hover:border-orange-500">
                   <td className="px-8 py-6"><TokenAlphaCell mint={t.address} ticker={t.ticker} dexUrl={t.dexUrl} /></td>
                   
-                  {/* AGE CELL WITH LIVE NOW ANIMATION */}
                   <td className="px-4 py-6 text-center">
                     <div className="flex flex-col items-center">
                         <span className="bg-orange-500/20 text-orange-500 px-3 py-1 rounded-full text-[11px] font-black border border-orange-500/30 animate-pulse">
