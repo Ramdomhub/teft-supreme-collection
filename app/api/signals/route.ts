@@ -19,11 +19,9 @@ async function checkSecurity(mint: string) {
     });
     const { result } = await res.json();
     
-    // 1. FREEZE & MINT AUTHORITY CHECK
     const isFreezeRevoked = result.authorities?.every((a: any) => a.scopes?.includes('owner')) || result.authorities?.length === 0;
     const hasSocials = result.content?.metadata?.extensions?.twitter || result.content?.metadata?.extensions?.telegram || result.content?.links?.external_url;
 
-    // 2. WHALE CHECK (Top 10 Holders)
     const holderRes = await fetch(HELIUS_URL!, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -41,9 +39,8 @@ async function checkSecurity(mint: string) {
     const top10Percent = (top10Amount / totalSupply) * 100;
 
     return {
-      isSafe: isFreezeRevoked && top10Percent < 30 && hasSocials,
-      top10: top10Percent.toFixed(1),
-      hasSocials: !!hasSocials
+      isSafe: isFreezeRevoked && top10Percent < 40 && hasSocials, // Whale-Check leicht gelockert (40%)
+      top10: top10Percent.toFixed(1)
     };
   } catch (e) {
     return { isSafe: false };
@@ -61,11 +58,10 @@ export async function GET() {
       const ageMin = (now - p.pairCreatedAt) / 60000;
       const mcap = p.fdv || 0;
       const liq = p.liquidity?.usd || 0;
-      // DEINE PARAMETER: 10 Min, $8k-$25k MCap, >$5k Liq
-      return p.chainId === 'solana' && ageMin <= 10 && mcap >= 8000 && mcap <= 25000 && liq >= 5000;
+      // TEST-PARAMETER: 10 Min, $5k-$100k MCap, >$2k Liq
+      return p.chainId === 'solana' && ageMin <= 15 && mcap >= 5000 && mcap <= 100000 && liq >= 2000;
     });
 
-    // Jetzt die Überlebenden durch den Helius-Sicherheits-Check jagen
     const filteredSignals = await Promise.all(rawSignals.map(async (p: any) => {
       const security = await checkSecurity(p.baseToken.address);
       if (!security.isSafe) return null;
@@ -78,7 +74,7 @@ export async function GET() {
         mcap: `$${Math.floor(p.fdv).toLocaleString()}`,
         vol: `$${Math.floor(p.volume.h24).toLocaleString()}`,
         liq: `$${Math.floor(p.liquidity.usd).toLocaleString()}`,
-        score: Math.floor(Math.random() * 10) + 85, // "God-Tier" Score
+        score: Math.floor(Math.random() * 10) + 85,
         dexUrl: p.url,
         holders: `Top 10: ${security.top10}%`
       };
