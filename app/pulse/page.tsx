@@ -1,101 +1,194 @@
 "use client";
-import { useState, useEffect } from "react";
-import { ArrowLeft, RefreshCw, ExternalLink, Zap, Wallet, Droplets, Copy, Check, ChevronDown, ShieldAlert, Info } from "lucide-react";
-import Link from "next/link";
 
-export default function TeftPulse() {
-  const [tokens, setTokens] = useState([]);
+import React, { useState, useEffect } from 'react';
+import { Copy, ExternalLink, Zap, RefreshCw, Search, ArrowUpRight } from 'lucide-react';
+
+interface Token {
+  name: string;
+  ticker: string;
+  address: string;
+  age: string;
+  mcap: string;
+  vol: string;
+  liq: string;
+  score: number;
+  dexUrl: string;
+  image: string;
+  twitter: string;
+  telegram: string;
+  isSafe: boolean;
+  holders: string;
+}
+
+export default function PulsePage() {
+  const [signals, setSignals] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [showOptions, setShowOptions] = useState(false);
-  const [copied, setCopied] = useState("");
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [tradeSize] = useState("0.5 SOL"); // Standard-Größe
 
   const fetchSignals = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/signals', { cache: 'no-store' });
+      const res = await fetch('/api/signals');
       const data = await res.json();
-      if (data.signals) setTokens(data.signals);
-      setLastUpdate(new Date());
-    } catch (e) { console.error(e); }
-    setLoading(false);
+      if (data.signals) {
+        setSignals(data.signals);
+        setLastUpdate(new Date());
+      }
+    } catch (error) {
+      console.error("Error fetching signals:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchSignals(); const i = setInterval(fetchSignals, 15000); return () => clearInterval(i); }, []);
+  useEffect(() => {
+    fetchSignals();
+    const interval = setInterval(fetchSignals, 30000); // Alle 30 Sek Auto-Refresh
+    return () => clearInterval(interval);
+  }, []);
+
+  const copyAddr = (addr: string) => {
+    navigator.clipboard.writeText(addr);
+    // Optional: Ein kleiner Toast oder Alert
+  };
 
   return (
-    <main className="min-h-screen bg-[#0f1112] text-[#9ca3af] font-sans antialiased">
-      <div className="relative w-full h-[300px] overflow-hidden">
-        <img src="/teft.png" className="w-full h-full object-cover opacity-20 grayscale" alt="TEFT" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1112] to-transparent" />
-        <div className="absolute top-6 left-6"><Link href="/" className="bg-black/60 border border-white/10 px-4 py-2 rounded-xl text-white font-bold text-xs flex items-center gap-2 uppercase tracking-widest hover:bg-white/10"><ArrowLeft className="w-4 h-4" /> Gateway</Link></div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-10 pb-20">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+    <main className="min-h-screen bg-[#0f1112] text-white font-sans p-4 md:p-8 selection:bg-orange-500/30">
+      {/* HEADER SECTION */}
+      <div className="max-w-7xl mx-auto mb-12">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/5 pb-8">
           <div>
-            <h1 className="text-5xl font-black text-white tracking-tighter italic uppercase">TEFT Pulse</h1>
-            <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
-               <span className="w-2 h-2 bg-orange-500 rounded-full animate-ping" /> Live Alpha Stream v1.7
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-orange-500 p-2 rounded-lg">
+                <Zap className="w-6 h-6 text-black fill-current" />
+              </div>
+              <h1 className="text-4xl font-black italic uppercase tracking-tighter">TEFT PULSE</h1>
+            </div>
+            <p className="text-zinc-500 text-sm font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+              </span>
+              Live Alpha Stream v1.8 • High Conviction
             </p>
           </div>
-          <button onClick={fetchSignals} className="p-3.5 bg-[#161819] rounded-2xl border border-white/5 hover:bg-white/5 transition-all text-orange-500">
-             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+
+          <div className="flex gap-4 items-center">
+            <div className="text-right mr-4 hidden md:block">
+              <p className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">Last Update</p>
+              <p className="text-sm font-mono text-zinc-400">{lastUpdate.toLocaleTimeString()}</p>
+            </div>
+            <button 
+              onClick={fetchSignals}
+              disabled={loading}
+              className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl border border-white/5 transition-all active:scale-95"
+            >
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN TERMINAL TABLE */}
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-[#161819] rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5 bg-black/20">
+                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Asset / Socials</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Age</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">MCap</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Volume 24h</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Liquidity</th>
+                  <th className="px-8 py-6 text-right text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">TEFT Score</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {loading && signals.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-8 py-20 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        <RefreshCw className="w-8 h-8 text-orange-500 animate-spin" />
+                        <p className="text-zinc-500 font-bold uppercase tracking-widest">Scanning Blockchain for Alpha...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  signals.map((t, i) => (
+                    <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
+                      {/* ASSET CELL */}
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            {t.image ? (
+                              <img src={t.image} className="w-12 h-12 rounded-full border-2 border-white/10 object-cover shadow-2xl" alt="logo" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-white font-black text-xs uppercase">{t.ticker[0]}</div>
+                            )}
+                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#161819] ${t.isSafe ? 'bg-green-500' : 'bg-red-500'}`} />
+                          </div>
+                          
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[15px] font-black text-white uppercase tracking-tight">{t.name}</span>
+                              <span className="text-[10px] text-zinc-500 font-bold tracking-widest">{t.ticker}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 mt-1">
+                              <button onClick={() => copyAddr(t.address)} className="text-[9px] font-black text-zinc-600 hover:text-white uppercase flex items-center gap-1 transition-colors">
+                                <Copy className="w-3 h-3" /> {t.address.slice(0,4)}...{t.address.slice(-4)}
+                              </button>
+                              
+                              {/* SOCIAL ICONS */}
+                              <div className="flex gap-2 ml-2">
+                                {t.twitter && (
+                                  <a href={t.twitter} target="_blank" className="p-1.5 bg-white/5 rounded-md hover:bg-white/10 text-zinc-400 hover:text-white transition-all">
+                                    <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                  </a>
+                                )}
+                                {t.telegram && (
+                                  <a href={t.telegram} target="_blank" className="p-1.5 bg-white/5 rounded-md hover:bg-white/10 text-zinc-400 hover:text-white transition-all">
+                                    <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-.99.53-1.41.52-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.73-3.35 3.68-1.57 4.44-1.84 4.94-1.85.11 0 .35.03.5.16.13.1.17.24.18.34.02.06.02.13.01.19z"/></svg>
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-8 py-6 font-mono text-[13px] text-zinc-400">{t.age}</td>
+                      <td className="px-8 py-6 font-mono text-[13px] text-zinc-200">{t.mcap}</td>
+                      <td className="px-8 py-6 font-mono text-[13px] text-zinc-400">{t.vol}</td>
+                      <td className="px-8 py-6 font-mono text-[13px] text-zinc-400">{t.liq}</td>
+
+                      {/* SCORE & ACTION CELL */}
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex flex-col items-end gap-2">
+                          <span className={`text-[12px] font-black px-3 py-1 rounded-lg border shadow-lg ${t.score > 85 ? 'bg-green-500/20 text-green-500 border-green-500/30' : 'bg-orange-500/20 text-orange-500 border-orange-500/30'}`}>
+                             SCORE {t.score}
+                          </span>
+                          <button className="bg-orange-500 hover:bg-orange-400 text-black px-5 py-2 rounded-xl text-[10px] font-black uppercase italic tracking-widest transition-all active:scale-95 flex items-center gap-2">
+                             Buy {tradeSize} <ArrowUpRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="bg-[#161819] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden">
-          <div className="flex justify-between items-center px-8 py-6 border-b border-white/5 bg-black/20">
-             <div className="flex gap-8">
-                <button className="text-white text-[11px] font-black uppercase border-b-2 border-orange-500 pb-6 -mb-6">Pulse Feed</button>
-                <button onClick={() => setShowOptions(!showOptions)} className="text-zinc-600 text-[11px] font-black uppercase flex items-center gap-2 hover:text-white">Options <ChevronDown className="w-3 h-3" /></button>
-             </div>
-             <div className="text-[10px] text-zinc-700 font-bold uppercase tracking-[0.2em]">Sync: {lastUpdate.toLocaleTimeString()}</div>
-          </div>
-
-          <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
-            <thead>
-              <tr className="text-[10px] text-zinc-600 uppercase tracking-[0.25em] border-b border-white/5 bg-black/10">
-                <th className="px-8 py-5 font-black">Token Alpha</th>
-                <th className="px-4 py-5 font-black text-center">Age</th>
-                <th className="px-4 py-5 font-black">Market Cap</th>
-                <th className="px-4 py-5 font-black">Liquidity</th>
-                <th className="px-8 py-5 font-black text-right">Execution</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {tokens.length === 0 && !loading && (
-                 <tr><td colSpan={5} className="py-20 text-center text-xs font-bold text-zinc-700 uppercase italic">Scanning for high-conviction signals...</td></tr>
-              )}
-              {tokens.map((t: any, i) => (
-                <tr key={i} className={`hover:bg-white/[0.03] transition-colors border-l-2 ${t.isSafe ? 'border-green-500' : 'border-orange-500/50'}`}>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      {t.image ? <img src={t.image} className="w-10 h-10 rounded-full border border-white/10" /> : <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-500 font-bold">{t.ticker[0]}</div>}
-                      <div>
-                        <div className="text-[14px] font-black text-white uppercase">{t.name}</div>
-                        <div className="text-[10px] text-zinc-600 font-bold">{t.address.slice(0,6)}...</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-6 text-center">
-                     <span className="bg-orange-500/20 text-orange-500 px-3 py-1 rounded-full text-[11px] font-black border border-orange-500/30 animate-pulse">{t.age}</span>
-                  </td>
-                  <td className="px-4 py-6 text-[15px] font-black text-white">{t.mcap}</td>
-                  <td className="px-4 py-6">
-                    <div className="text-[15px] font-black text-blue-400">{t.liq}</div>
-                    <div className="text-[10px] text-zinc-600 font-bold mt-1 uppercase">Vol: {t.vol}</div>
-                  </td>
-                  <td className="px-8 py-6 text-right">
-                    <button className="bg-orange-500 px-6 py-3 rounded-xl text-[11px] font-black text-black flex items-center gap-2 hover:bg-orange-400 ml-auto uppercase italic">
-                      <Zap className="w-3 h-3 fill-black" /> Buy
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* FOOTER STATS */}
+        <div className="mt-8 flex justify-between items-center text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] px-4">
+          <p>Scanned via Helius RPC • Powered by TEFT Engine</p>
+          <div className="flex gap-6">
+            <a href="/marketplace" className="hover:text-white transition-colors">Marketplace</a>
+            <a href="/teft-token" className="hover:text-white transition-colors">NFTs</a>
           </div>
         </div>
       </div>
