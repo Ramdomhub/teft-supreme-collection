@@ -19,9 +19,11 @@ async function checkSecurity(mint: string) {
     });
     const { result } = await res.json();
     
+    // Sicherheitsparameter prüfen
     const isFreezeRevoked = result.authorities?.every((a: any) => a.scopes?.includes('owner')) || result.authorities?.length === 0;
     const hasSocials = result.content?.metadata?.extensions?.twitter || result.content?.metadata?.extensions?.telegram || result.content?.links?.external_url;
 
+    // Whale Check (Top 10 Holders)
     const holderRes = await fetch(HELIUS_URL!, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -39,8 +41,9 @@ async function checkSecurity(mint: string) {
     const top10Percent = (top10Amount / totalSupply) * 100;
 
     return {
-      isSafe: isFreezeRevoked && top10Percent < 40 && hasSocials, // Whale-Check leicht gelockert (40%)
-      top10: top10Percent.toFixed(1)
+      isSafe: isFreezeRevoked && top10Percent < 40 && hasSocials,
+      top10: top10Percent.toFixed(1),
+      image: result.content?.links?.image || result.content?.metadata?.image || ""
     };
   } catch (e) {
     return { isSafe: false };
@@ -48,17 +51,21 @@ async function checkSecurity(mint: string) {
 }
 
 export async function GET() {
+  if (!HELIUS_URL) {
+    return NextResponse.json({ error: "HELIUS_KEY_MISSING" }, { status: 500 });
+  }
+
   try {
     const response = await fetch('https://api.dexscreener.com/latest/dex/search?q=pump', { cache: 'no-store' });
     const data = await response.json();
     if (!data.pairs) return NextResponse.json({ signals: [] });
 
     const now = Date.now();
+    // Test-Filter: 15 Min Age, $5k - $100k MCap
     const rawSignals = data.pairs.filter((p: any) => {
       const ageMin = (now - p.pairCreatedAt) / 60000;
       const mcap = p.fdv || 0;
       const liq = p.liquidity?.usd || 0;
-      // TEST-PARAMETER: 10 Min, $5k-$100k MCap, >$2k Liq
       return p.chainId === 'solana' && ageMin <= 15 && mcap >= 5000 && mcap <= 100000 && liq >= 2000;
     });
 
@@ -76,12 +83,13 @@ export async function GET() {
         liq: `$${Math.floor(p.liquidity.usd).toLocaleString()}`,
         score: Math.floor(Math.random() * 10) + 85,
         dexUrl: p.url,
-        holders: `Top 10: ${security.top10}%`
+        holders: `Top 10: ${security.top10}%`,
+        image: security.image
       };
     }));
 
     return NextResponse.json({ signals: filteredSignals.filter(Boolean) });
   } catch (e) {
-    return NextResponse.json({ error: "Pulse Error" }, { status: 500 });
+    return NextResponse.json({ error: "Fetch Error" }, { status: 500 });
   }
 }
