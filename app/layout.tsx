@@ -2,26 +2,30 @@ import './globals.css'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.teftlegion.com"),
-  title: 'TEFT Legion | Solana Alpha',
-  description: 'The elite gateway to Solana trading and alpha signals.',
+  // Das hier ist wichtig, damit Next.js weiß, wo das Bild liegt
+  metadataBase: new URL("https://www.teftlegion.com"), 
+  title: 'TEFT Legion',
+  description: 'Elite Solana Ecosystem',
   openGraph: {
     title: 'TEFT Legion',
-    description: 'Elite Solana Alpha Terminal.',
-    url: '/',
-    siteName: 'TEFT',
-    // HIER IST DIE PNG
-    images: [{ url: '/teft-preview.png', width: 1200, height: 630, alt: 'TEFT Legion Alpha Gateway' }],
-    locale: 'de_DE',
+    description: 'Gateway to Solana Alpha',
+    url: 'https://www.teftlegion.com',
+    siteName: 'TEFT Legion',
+    images: [
+      {
+        url: '/teft-preview.png', // Dein Bild aus dem public-Ordner
+        width: 1200,
+        height: 630,
+        alt: 'TEFT Preview',
+      },
+    ],
     type: 'website',
   },
   twitter: {
-    card: 'summary_large_image', // Für das große Vorschaubild
-    title: 'TEFT Legion | Solana Alpha',
-    description: 'Elite Solana Alpha Terminal.',
-    // HIER IST DIE PNG
-    images: ['/teft-preview.png'],
-    creator: '@TEFTofficial', // Passe deinen Handle an
+    card: 'summary_large_image', // Das erzwingt das GROSSE Bild auf X
+    title: 'TEFT Legion',
+    description: 'Gateway to Solana Alpha',
+    images: ['/teft-preview.png'], // Pfad zu deiner PNG
   },
 }
 
@@ -32,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-[#0f1112]">{children}</body>
+      <body className="bg-[#f5f5f5]">{children}</body>
     </html>
   )
 }
