@@ -1,121 +1,437 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Copy, Zap, RefreshCw, ArrowUpRight } from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Mail,
+  RefreshCw,
+  Send,
+  Twitter,
+} from "lucide-react";
+
+type PulseToken = {
+  name: string;
+  ticker: string;
+  address: string;
+  ageMinutes: number;
+  marketCap: number;
+  volume24h: number;
+  liquidityUsd: number;
+  score: number;
+  signal: "Strong" | "Watch" | "Spec" | "Ignore" | string;
+  image: string;
+  twitter: string;
+  telegram: string;
+  website: string;
+  isFreezeSafe: boolean;
+  change5m: number;
+  change1h: number;
+  change24h: number;
+  buys5m: number;
+  sells5m: number;
+};
+
+type PulseResponse = {
+  updatedAt: string;
+  criteria: {
+    liveWindowMinutes: number;
+    minVolume24h: number;
+    maxMarketCap: number;
+  };
+  liveSignals: PulseToken[];
+  archiveSignals: PulseToken[];
+  error?: string;
+};
+
+const HERO_IMAGE = "/teft.png";
+const SOL_MINT = "So11111111111111111111111111111111111111112";
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 0,
+  }).format(Math.round(value));
+}
+
+function formatAge(minutes: number) {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
+}
+
+function formatChange(value: number) {
+  const rounded = value.toFixed(1);
+  return `${value >= 0 ? "+" : ""}${rounded}%`;
+}
+
+function signalClasses(signal: string) {
+  if (signal === "Strong") {
+    return "bg-emerald-500/15 text-emerald-300 border border-emerald-400/30";
+  }
+
+  if (signal === "Watch") {
+    return "bg-amber-500/15 text-amber-200 border border-amber-400/30";
+  }
+
+  return "bg-zinc-500/15 text-zinc-200 border border-zinc-400/20";
+}
+
+function buildJupiterUrl(mint: string) {
+  return `https://jup.ag/swap?buy=${mint}&sell=${SOL_MINT}`;
+}
+
+function initials(token: PulseToken) {
+  return (token.ticker || token.name || "T").slice(0, 2).toUpperCase();
+}
+
+function TokenRow({
+  token,
+  tradeSize,
+  archive = false,
+}: {
+  token: PulseToken;
+  tradeSize: string;
+  archive?: boolean;
+}) {
+  return (
+    <div className="rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm p-4">
+      <div className="flex items-start gap-3">
+        <div className="h-12 w-12 rounded-full overflow-hidden bg-white/10 border border-white/10 shrink-0">
+          {token.image ? (
+            <img
+              src={token.image}
+              alt={token.name}
+              className="h-full w-full object-cover"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-xs font-black text-white/70">
+              {initials(token)}
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-white font-bold text-[22px] leading-none">
+                  {token.name}
+                </p>
+                <span className="text-white/40 text-sm uppercase tracking-wide">
+                  {token.ticker}
+                </span>
+              </div>
+
+              <div className="mt-2 flex items-center gap-2 flex-wrap text-white/45 text-xs">
+                <span>{formatAge(token.ageMinutes)}</span>
+                <span>•</span>
+                <span>${formatCurrency(token.marketCap)} MCAP</span>
+                <span>•</span>
+                <span>${formatCurrency(token.volume24h)} VOL</span>
+              </div>
+
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                {token.twitter ? (
+                  <a
+                    href={token.twitter}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="h-7 w-7 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/70 hover:text-white transition"
+                  >
+                    <Twitter size={14} />
+                  </a>
+                ) : null}
+
+                {token.telegram ? (
+                  <a
+                    href={token.telegram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="h-7 w-7 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/70 hover:text-white transition"
+                  >
+                    <Send size={14} />
+                  </a>
+                ) : null}
+
+                {token.website ? (
+                  <a
+                    href={token.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-white/55 hover:text-white transition"
+                  >
+                    Website
+                  </a>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="text-right shrink-0">
+              <div
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ${signalClasses(
+                  token.signal
+                )}`}
+              >
+                <span>{token.signal}</span>
+                <span className="text-white">{token.score}</span>
+              </div>
+
+              {archive ? (
+                <div className="mt-3 space-y-1 text-xs text-white/60">
+                  <div>5m {formatChange(token.change5m)}</div>
+                  <div>1h {formatChange(token.change1h)}</div>
+                  <div>24h {formatChange(token.change24h)}</div>
+                </div>
+              ) : (
+                <div className="mt-3 text-xs text-white/60">
+                  Buy/Sell 5m {token.buys5m}/{token.sells5m}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
+            <div className="text-xs text-white/45 break-all">
+              {token.address.slice(0, 4)}...{token.address.slice(-4)}
+            </div>
+
+            <a
+              href={buildJupiterUrl(token.address)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-white text-black px-4 py-2 text-sm font-extrabold hover:opacity-90 transition"
+            >
+              Buy {tradeSize} SOL
+              <ExternalLink size={15} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function PulsePage() {
-  const [signals, setSignals] = useState<any[]>([]);
+  const [data, setData] = useState<PulseResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tradeSize] = useState("0.5 SOL");
+  const [tradeSize, setTradeSize] = useState("0.5");
+  const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now());
 
-  const fetchSignals = async () => {
-    setLoading(true);
+  async function fetchSignals() {
     try {
-      const res = await fetch('/api/signals');
-      const data = await res.json();
-      if (data.signals) setSignals(data.signals);
-    } catch (e) {
-      console.error(e);
+      setError(null);
+      const response = await fetch("/api/signals", {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("Pulse data unavailable");
+      }
+
+      const json = (await response.json()) as PulseResponse;
+      setData(json);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown Pulse error");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
     fetchSignals();
-    const interval = setInterval(fetchSignals, 30000);
-    return () => clearInterval(interval);
+
+    const refreshInterval = setInterval(fetchSignals, 15_000);
+    const clockInterval = setInterval(() => setNow(Date.now()), 1_000);
+
+    return () => {
+      clearInterval(refreshInterval);
+      clearInterval(clockInterval);
+    };
   }, []);
 
-  const copyAddr = (addr: string) => {
-    navigator.clipboard.writeText(addr);
-  };
+  const liveSignals = data?.liveSignals ?? [];
+  const archiveSignals = data?.archiveSignals ?? [];
+
+  const updatedAgo = useMemo(() => {
+    if (!data?.updatedAt) return "Updating...";
+    const seconds = Math.max(
+      0,
+      Math.floor((now - new Date(data.updatedAt).getTime()) / 1000)
+    );
+    return `Updated ${seconds} seconds ago`;
+  }, [data?.updatedAt, now]);
 
   return (
-    <main className="min-h-screen bg-[#0f1112] text-white p-4 md:p-8 font-sans">
-      <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-12 border-b border-white/5 pb-8">
-          <div className="flex items-center gap-4">
-            <div className="bg-orange-500 p-2 rounded-lg">
-              <Zap className="w-6 h-6 text-black fill-current" />
+    <main className="min-h-screen bg-[#dcdcdc] py-8 px-3 sm:px-4">
+      <div className="mx-auto w-full max-w-[440px] overflow-hidden rounded-[36px] border border-black/5 bg-[#111111] shadow-[0_30px_80px_rgba(0,0,0,0.22)]">
+        <section
+          className="relative min-h-[330px] bg-cover bg-center"
+          style={{ backgroundImage: `url(${HERO_IMAGE})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/45 to-black/80" />
+
+          <div className="relative z-10 p-5 flex min-h-[330px] flex-col">
+            <div className="flex items-center justify-between">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 rounded-full bg-black/25 px-3 py-2 text-sm font-semibold text-white/85 backdrop-blur-md border border-white/10"
+              >
+                <ArrowLeft size={16} />
+                Back
+              </Link>
+
+              <div className="rounded-full bg-black/25 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white/65 backdrop-blur-md border border-white/10">
+                Feed Options soon
+              </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-black italic uppercase tracking-tighter">TEFT PULSE</h1>
-              <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mt-1">Live Alpha Stream v1.8</p>
+
+            <div className="flex-1 flex items-center justify-center">
+              <a
+                href="#live-signals"
+                className="inline-flex items-center justify-center rounded-[18px] bg-black/45 px-7 py-4 text-[18px] font-semibold text-white backdrop-blur-md border border-white/15"
+              >
+                Enter Gateway
+              </a>
+            </div>
+
+            <div className="border-t border-white/10 pt-5">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <h1 className="text-[34px] font-black leading-none tracking-tight text-white">
+                    TEFT Pulse
+                  </h1>
+                  <p className="mt-2 text-white/70 text-lg">
+                    See what others don’t.
+                  </p>
+                </div>
+
+                <button
+                  onClick={fetchSignals}
+                  className="inline-flex items-center gap-2 rounded-full bg-black/25 px-4 py-3 text-sm font-semibold text-white/85 backdrop-blur-md border border-white/10 hover:bg-black/35 transition"
+                >
+                  <RefreshCw size={16} />
+                  Refresh
+                </button>
+              </div>
             </div>
           </div>
-          <button onClick={fetchSignals} className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl border border-white/5 transition-all">
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
+        </section>
 
-        {/* TERMINAL TABLE */}
-        <div className="bg-[#161819] rounded-[2rem] border border-white/5 overflow-hidden shadow-2xl">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-black/20 border-b border-white/5">
-                <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Asset / Socials</th>
-                <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Age</th>
-                <th className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">MCap</th>
-                <th className="px-8 py-6 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">TEFT Score</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {signals.map((t, i) => (
-                <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        {t.image ? (
-                          <img src={t.image} className="w-12 h-12 rounded-full border-2 border-white/10 object-cover shadow-2xl" alt="logo" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-white font-black text-xs uppercase">{t.ticker?.[0]}</div>
-                        )}
-                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#161819] ${t.isSafe ? 'bg-green-500' : 'bg-red-500'}`} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[15px] font-black text-white uppercase tracking-tight">{t.name}</span>
-                          <span className="text-[10px] text-zinc-500 font-bold tracking-widest">{t.ticker}</span>
-                        </div>
-                        <div className="flex items-center gap-3 mt-1">
-                          <button onClick={() => copyAddr(t.address)} className="text-[9px] font-black text-zinc-600 hover:text-white uppercase flex items-center gap-1 transition-colors">
-                            <Copy className="w-3 h-3" /> {t.address.slice(0,4)}...{t.address.slice(-4)}
-                          </button>
-                          <div className="flex gap-2 ml-2">
-                            {t.twitter && (
-                              <a href={t.twitter} target="_blank" className="p-1.5 bg-white/5 rounded-md hover:bg-white/10 text-zinc-400 hover:text-white transition-all">
-                                <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                              </a>
-                            )}
-                            {t.telegram && (
-                              <a href={t.telegram} target="_blank" className="p-1.5 bg-white/5 rounded-md hover:bg-white/10 text-zinc-400 hover:text-white transition-all">
-                                <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-.99.53-1.41.52-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.73-3.35 3.68-1.57 4.44-1.84 4.94-1.85.11 0 .35.03.5.16.13.1.17.24.18.34.02.06.02.13.01.19z"/></svg>
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 font-mono text-sm text-zinc-400">{t.age}</td>
-                  <td className="px-8 py-6 font-mono text-sm text-zinc-200">{t.mcap}</td>
-                  <td className="px-8 py-6 text-right">
-                    <div className="flex flex-col items-end gap-2">
-                      <span className={`text-[12px] font-black px-3 py-1 rounded-lg border shadow-lg ${t.score > 85 ? 'bg-green-500/20 text-green-500 border-green-500/30' : 'bg-orange-500/20 text-orange-500 border-orange-500/30'}`}>
-                         SCORE {t.score}
-                      </span>
-                      <button className="bg-orange-500 hover:bg-orange-400 text-black px-5 py-2 rounded-xl text-[10px] font-black uppercase italic tracking-widest transition-all flex items-center gap-2">
-                         Buy {tradeSize} <ArrowUpRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <section className="px-4 pb-6 -mt-1">
+          <div className="rounded-[28px] border border-white/10 bg-black/55 backdrop-blur-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.22)]">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="rounded-[14px] bg-white/10 px-4 py-2 text-white font-semibold">
+                  Feed
+                </span>
+                <span className="rounded-[14px] bg-white/5 px-4 py-2 text-white/60 font-medium">
+                  Archive 24h
+                </span>
+                <span className="rounded-[14px] bg-white/5 px-4 py-2 text-white/40 font-medium">
+                  Options soon
+                </span>
+              </div>
+
+              <div className="text-sm text-white/55">{updatedAgo}</div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 rounded-[16px] bg-white/5 border border-white/10 px-3 py-2">
+                <span className="text-sm text-white/55">Buy Size</span>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={tradeSize}
+                  onChange={(event) => setTradeSize(event.target.value)}
+                  className="w-16 bg-transparent text-white font-bold outline-none"
+                />
+                <span className="text-sm text-white/75">SOL</span>
+              </div>
+
+              <a
+                href="mailto:support@teftlegion.com?subject=TEFT%20Pulse%20Feedback"
+                className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm font-medium text-white/80 border border-white/10 hover:bg-white/10 transition"
+              >
+                <Mail size={15} />
+                Feedback
+              </a>
+            </div>
+
+            <div className="mt-4 rounded-[20px] border border-white/10 bg-white/[0.03] px-3 py-3 text-xs text-white/55">
+              Live filter: age ≤ {data?.criteria.liveWindowMinutes ?? 10} min · volume ≥ $
+              {formatCurrency(data?.criteria.minVolume24h ?? 5000)} · mcap ≤ $
+              {formatCurrency(data?.criteria.maxMarketCap ?? 12000)}
+            </div>
+
+            <div id="live-signals" className="mt-5">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-white text-lg font-extrabold">Live Signals</h2>
+                <div className="text-xs text-white/45">
+                  {liveSignals.length} active
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="rounded-[22px] border border-white/10 bg-white/5 p-5 text-white/60">
+                  Loading Pulse...
+                </div>
+              ) : error ? (
+                <div className="rounded-[22px] border border-red-400/20 bg-red-500/10 p-5 text-red-200">
+                  {error}
+                </div>
+              ) : liveSignals.length === 0 ? (
+                <div className="rounded-[22px] border border-white/10 bg-white/5 p-5 text-white/60">
+                  No live signals right now.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {liveSignals.map((token) => (
+                    <TokenRow key={token.address} token={token} tradeSize={tradeSize} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-7">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-white text-lg font-extrabold">
+                  Missed / Still Running · 24h
+                </h2>
+                <div className="text-xs text-white/45">
+                  {archiveSignals.length} tracked
+                </div>
+              </div>
+
+              {archiveSignals.length === 0 ? (
+                <div className="rounded-[22px] border border-white/10 bg-white/5 p-5 text-white/60">
+                  No archive candidates yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {archiveSignals.map((token) => (
+                    <TokenRow
+                      key={`${token.address}-archive`}
+                      token={token}
+                      tradeSize={tradeSize}
+                      archive
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 text-center text-sm text-white/40">
+              Many of these will fail. Don’t trust — verify. Signal fee applies.
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );
