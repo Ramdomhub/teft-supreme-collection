@@ -20,7 +20,7 @@ type PulseToken = {
   volume24h: number;
   liquidityUsd: number;
   score: number;
-  signal: "Strong" | "Watch" | "Spec" | "Ignore" | string;
+  signal: "Strong" | "Watch" | "Spec" | "Near Miss" | "Ignore" | string;
   image: string;
   twitter: string;
   telegram: string;
@@ -39,6 +39,10 @@ type PulseResponse = {
     liveWindowMinutes: number;
     minVolume24h: number;
     maxMarketCap: number;
+  };
+  meta?: {
+    strictLiveCount: number;
+    fallbackUsed: boolean;
   };
   liveSignals: PulseToken[];
   archiveSignals: PulseToken[];
@@ -73,6 +77,14 @@ function signalClasses(signal: string) {
 
   if (signal === "Watch") {
     return "bg-amber-500/15 text-amber-200 border border-amber-400/30";
+  }
+
+  if (signal === "Spec") {
+    return "bg-sky-500/15 text-sky-200 border border-sky-400/30";
+  }
+
+  if (signal === "Near Miss") {
+    return "bg-orange-500/15 text-orange-200 border border-orange-400/30";
   }
 
   return "bg-zinc-500/15 text-zinc-200 border border-zinc-400/20";
@@ -226,6 +238,7 @@ export default function PulsePage() {
   async function fetchSignals() {
     try {
       setError(null);
+
       const response = await fetch("/api/signals", {
         cache: "no-store",
       });
@@ -365,14 +378,23 @@ export default function PulsePage() {
             </div>
 
             <div className="mt-4 rounded-[20px] border border-white/10 bg-white/[0.03] px-3 py-3 text-xs text-white/55">
-              Live filter: age ≤ {data?.criteria.liveWindowMinutes ?? 10} min · volume ≥ $
-              {formatCurrency(data?.criteria.minVolume24h ?? 5000)} · mcap ≤ $
-              {formatCurrency(data?.criteria.maxMarketCap ?? 12000)}
+              Live filter: age ≤ {data?.criteria.liveWindowMinutes ?? 10} min ·
+              volume ≥ ${formatCurrency(data?.criteria.minVolume24h ?? 5000)} ·
+              mcap ≤ ${formatCurrency(data?.criteria.maxMarketCap ?? 12000)}
             </div>
+
+            {data?.meta?.fallbackUsed ? (
+              <div className="mt-3 rounded-[18px] border border-orange-400/20 bg-orange-500/10 px-3 py-3 text-xs text-orange-200">
+                No strict live winners right now — showing best near-miss
+                candidates for testing.
+              </div>
+            ) : null}
 
             <div id="live-signals" className="mt-5">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white text-lg font-extrabold">Live Signals</h2>
+                <h2 className="text-white text-lg font-extrabold">
+                  Live Signals
+                </h2>
                 <div className="text-xs text-white/45">
                   {liveSignals.length} active
                 </div>
@@ -393,7 +415,11 @@ export default function PulsePage() {
               ) : (
                 <div className="space-y-3">
                   {liveSignals.map((token) => (
-                    <TokenRow key={token.address} token={token} tradeSize={tradeSize} />
+                    <TokenRow
+                      key={token.address}
+                      token={token}
+                      tradeSize={tradeSize}
+                    />
                   ))}
                 </div>
               )}
