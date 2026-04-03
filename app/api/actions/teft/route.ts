@@ -9,7 +9,11 @@ const headers = {
   "X-Blockchain-Ids": "solana:mainnet-beta",
 };
 
-const BASE_URL = "https://teft-supreme-collection.vercel.app";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "https://teft-supreme-collection.vercel.app";
+
+const MAGIC_EDEN_API_BASE = "https://api-mainnet.magiceden.dev/v2";
 const MINT = "FBduFJSWcfExLLDyxzeiaB64Dh85KDKiFbN6DXsH6xzz";
 const FALLBACK_IMAGE = `${BASE_URL}/teft.png`;
 
@@ -17,6 +21,8 @@ type Listing = {
   price?: number;
   seller?: string;
   auctionHouse?: string;
+  tokenAddress?: string; // Magic Eden listings often expose the token account here
+  tokenATA?: string; // fallback if response uses this name
 };
 
 type TokenMeta = {
@@ -24,51 +30,59 @@ type TokenMeta = {
   image?: string;
 };
 
+function getMagicEdenApiKey() {
+  const apiKey = process.env.MAGIC_EDEN_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing MAGIC_EDEN_API_KEY");
+  }
+  return apiKey;
+}
+
+function jsonError(message: string, status = 500) {
+  return new Response(message, { status, headers });
+}
+
 export async function OPTIONS() {
   return new Response(null, { headers });
 }
 
+async function getCurrentListing(): Promise<Listing | undefined> {
+  const listingRes = await fetch(
+    `${MAGIC_EDEN_API_BASE}/tokens/${MINT}/listings`,
+    {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+    }
+  );
+
+  if (!listingRes.ok) {
+    throw new Error(`Listings fetch failed: ${listingRes.status}`);
+  }
+
+  const listings = (await listingRes.json()) as Listing[];
+  return Array.isArray(listings) ? listings[0] : undefined;
+}
+
+async function getTokenMeta(): Promise<TokenMeta> {
+  const metaRes = await fetch(`${MAGIC_EDEN_API_BASE}/tokens/${MINT}`, {
+    headers: { accept: "application/json" },
+    cache: "no-store",
+  });
+
+  if (!metaRes.ok) {
+    throw new Error(`Metadata fetch failed: ${metaRes.status}`);
+  }
+
+  return (await metaRes.json()) as TokenMeta;
+}
+
 export async function GET() {
   try {
-    // 1) Aktuelles Listing holen (öffentlich)
-    const listingRes = await fetch(
-      `https://api-mainnet.magiceden.dev/v2/tokens/${MINT}/listings`,
-      {
-        headers: {
-          accept: "application/json",
-        },
-        cache: "no-store",
-      }
-    );
+    const [listing, meta] = await Promise.all([getCurrentListing(), getTokenMeta()]);
 
-    if (!listingRes.ok) {
-      throw new Error(`Listings fetch failed: ${listingRes.status}`);
-    }
-
-    const listings = (await listingRes.json()) as Listing[];
-    const listing = Array.isArray(listings) ? listings[0] : undefined;
     const price = listing?.price;
-
-    // 2) NFT-Metadaten holen (öffentlich)
-    const metaRes = await fetch(
-      `https://api-mainnet.magiceden.dev/v2/tokens/${MINT}`,
-      {
-        headers: {
-          accept: "application/json",
-        },
-        cache: "no-store",
-      }
-    );
-
-    if (!metaRes.ok) {
-      throw new Error(`Metadata fetch failed: ${metaRes.status}`);
-    }
-
-    const meta = (await metaRes.json()) as TokenMeta;
-
     const name = meta?.name || "TEFT Supreme";
     const image = meta?.image || FALLBACK_IMAGE;
-
     const hasPrice = typeof price === "number";
 
     return Response.json(
@@ -120,96 +134,74 @@ export async function POST(req: NextRequest) {
     const buyer = body?.account;
 
     if (!buyer) {
-      return new Response("Missing wallet", { status: 400, headers });
+      return jsonError("Missing wallet", 400);
     }
 
-    // 1) Aktuelles Listing holen
-    const listingRes = await fetch(
-      `https://api-mainnet.magiceden.dev/v2/tokens/${MINT}/listings`,
-      {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer YOUR_API_KEY`,
-        },
-        cache: "no-store",
-      }
-    );
+    const listing = await getCurrentListing();
 
-    if (!listingRes.ok) {
-      const text = await listingRes.text();
-      console.error("Listing fetch failed:", text);
-      return new Response("Failed to fetch listing", {
-        status: 500,
-        headers,
-      });
+    if (!listing) {
+      return jsonError("No listing found", 400);
     }
-
-    const listings = (await listingRes.json()) as Listing[];
-
-    if (!Array.isArray(listings) || listings.length === 0) {
-      return new Response("No listing found", { status: 400, headers });
-    }
-
-    const listing = listings[0];
 
     if (
       typeof listing.price !== "number" ||
       !listing.seller ||
       !listing.auctionHouse
     ) {
-      return new Response("Incomplete listing data", {
-        status: 400,
-        headers,
-      });
+      return jsonError("Incomplete listing data", 400);
     }
 
-    // 2) Buy-Instruction holen
+    const tokenATA = listing.tokenAddress || listing.tokenATA;
+    if (!tokenATA) {
+      return jsonError("Missing token account for listing", 502);
+    }
+
+    const apiKey = getMagicEdenApiKey();
+
+    const params = new URLSearchParams({
+      buyer,
+      seller: listing.seller,
+      auctionHouseAddress: listing.auctionHouse,
+      tokenMint: MINT,
+      tokenATA,
+      price: String(listing.price),
+    });
+
     const buyRes = await fetch(
-      "https://api-mainnet.magiceden.dev/v2/instructions/buy_now",
+      `${MAGIC_EDEN_API_BASE}/instructions/buy_now?${params.toString()}`,
       {
-        method: "POST",
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer YOUR_API_KEY`,
+          accept: "application/json",
+          Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          buyer,
-          seller: listing.seller,
-          auctionHouseAddress: listing.auctionHouse,
-          tokenMint: MINT,
-          price: listing.price,
-        }),
+        cache: "no-store",
       }
     );
 
     if (!buyRes.ok) {
       const text = await buyRes.text();
       console.error("Buy instruction failed:", text);
-      return new Response("Failed to create buy transaction", {
-        status: 500,
-        headers,
-      });
+      return jsonError("Failed to create buy transaction", 500);
     }
 
     const data = await buyRes.json();
+    const transaction = data?.tx || data?.transaction;
 
-    if (!data?.tx) {
+    if (!transaction) {
       console.error("Unexpected buy response:", data);
-      return new Response("Missing transaction in response", {
-        status: 500,
-        headers,
-      });
+      return jsonError("Missing transaction in response", 500);
     }
 
     return Response.json(
       {
-        transaction: data.tx,
+        transaction,
         message: `Buy TEFT NFT for ${listing.price} SOL`,
       },
       { headers }
     );
   } catch (error) {
     console.error("POST action error:", error);
-    return new Response("Error", { status: 500, headers });
+    return jsonError("Error", 500);
   }
 }
