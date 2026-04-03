@@ -21,8 +21,8 @@ type Listing = {
   price?: number;
   seller?: string;
   auctionHouse?: string;
-  tokenAddress?: string; // Magic Eden listings often expose the token account here
-  tokenATA?: string; // fallback if response uses this name
+  tokenAddress?: string;
+  tokenATA?: string;
 };
 
 type TokenMeta = {
