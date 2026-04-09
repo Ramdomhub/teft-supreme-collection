@@ -1,32 +1,25 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  // SPEZIFISCHER TITEL FÜR PULSE
-  title: 'TEFT Pulse | Live Alpha Terminal',
-  description: 'Live High-Conviction Solana Signals.',
+  title: 'TEFT Oracle | Live Alpha Terminal',
+  description: 'Real-time Solana wallet intelligence. See what others don\'t.',
   openGraph: {
-    title: 'TEFT Pulse | Live Alpha Terminal',
-    description: 'Real-time Solana sniping & analysis engine.',
+    title: 'TEFT Oracle | Live Alpha Terminal',
+    description: 'Real-time Solana sniping & wallet intelligence engine.',
     url: '/pulse',
     siteName: 'TEFT Legion',
-    // HIER IST DIE PNG FÜR PULSE
-    images: [{ url: '/teft-preview.png', width: 1200, height: 630, alt: 'TEFT Pulse Alpha Terminal' }],
-    locale: 'de_DE',
+    images: [{ url: '/teft-preview.png', width: 1200, height: 630, alt: 'TEFT Oracle Alpha Terminal' }],
+    locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TEFT Pulse | Live Alpha Terminal',
-    description: 'Real-time Solana sniping & analysis engine.',
-    // HIER IST DIE PNG FÜR PULSE
+    title: 'TEFT Oracle | Live Alpha Terminal',
+    description: 'Real-time Solana sniping & wallet intelligence engine.',
     images: ['/teft-preview.png'],
   },
 }
 
-export default function PulseLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function PulseLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
